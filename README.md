@@ -160,24 +160,13 @@ support query without specifying all the primary keys, but it is not recommended
 #### CQL
 JOIN, GROUP BY, Subquery are not supported.
 
-
 ## data warehouse
-is OLAP system, is a copy of transaction data specifically structured for query and analysis.
+data warehouse is OLAP system, a copy of transaction data specifically structured for query and analysis.
 data struct for data warehouse
     - dimensional model
-    could be different from traditional dimension table. Star schema is an good option for OLAP, not OLTP(too many joins), and it is easier to understand than 3NF Schema.
-    
-    - 
-### SQL ETL
+    could be different from traditional dimension table. Star schema is a good option for OLAP, not OLTP(too many joins), it is easier to understand than 3NF Schema.
 
-- Extract
-query 3NF DB, 比如select
-- Transform
-join talbes, change types, add new columns, 比如EXTRACT, JOIN
-- Loading
-insert into facts and dimensions tables, 比如INSERT
-
-#### ipython-sql in jupyter
+tips for ipython-sql in jupyter
 - %sql
 one line sql query, can access python var using $
 - %%sql
@@ -191,22 +180,22 @@ multi-line sql query, can not access python var using $
 
 #### Kimball's Bus Architecture
 ![](docs/Kimball_bus.png)
-- uses conformed dimensions
-- both atomic and summary data
-- it is dimensional
+- conformed dimensions
+- atomic and summary data
+- dimensional
 
 #### Independent data marts
 ![](docs/Data_marts.png)
 - independent ETL processes and dimensional models
-- seperate and smaller dimensional models
+- seperate and small dimensional models
 - different fact tables for same events
 - inconsistent views
-- it is generally discouraged
+- generally discouraged
 
-#### Inmon's Corporate Information Factory(CIF)
+#### Inmon's Cooperative Information Factory(CIF)
 ![](docs/CIF.PNG)
-- 2 ETL Process
-- 3NF as enterprise-wide data store, accessable by end-user
+- two ETL Processes: ETL Process for the Data Warehouse, ETL Process for the Data Marts
+- 3NF Database accessable by end-user
 - data marts are dimnesionally modeled and mostly aggregated
 
 #### Hybrid Kimball Bus & Inmon CIF
@@ -218,6 +207,13 @@ multi-line sql query, can not access python var using $
 ### OLAP Cubes
 an aggregation of a fact metric on a number of dimensions. the OLAP cubes should store the finest grain of data.
 using **grouping sets ()** or **cube()** could optimize query with only one pass through facts tables instead of multi.
+
+1) MOLAP
+data is stored in a multidimensional cube.MOLAP is optimized for fast data retrieval, and is efficient for slicing and dicing operations. It can perform complex calculations ahead of time during the cube creation process.
+
+2) ROLAP
+compute the OLAP cubes on the fly from existing relational databases where dimensional model resides. 
+using column format is more efficient, possible extension is cstore-fdw
 
 #### Operations
 1) Rollup
@@ -232,17 +228,11 @@ Slice: Reducing N dimensions to N-1 dimensions by restricting **one** dimension 
 4) Dice
 Dice: computing a sub-cube by restricting **multi** dimensions
 
-#### cubes approaches
-1) MOLAP
-pre-aggregate the OLAP cubes and saves them on a special purpose non-relational database
-
-2) ROLAP
-compute the OLAP cubes on teh fly from existing relational databases where dimensional model resides. (using column format is more efficient, possible extension is cstore-fdw)
-
 
 ### Cloud Data Warehouse
-#### Cloud SQL
-managed databases mean that the user doesn't have to manage the hardware resources to gain optimal performance.
+#### Database
+1. SQL
+managed databases: the user doesn't have to manage the hardware resources to gain optimal performance.
 1) Microsoft Azure
 Azure SQL Database (MS SQL Server)
 Azure Database for MySQL
@@ -253,8 +243,7 @@ Cloud SQL (MySQL, PostgreSQL, and MS SQL Server)
 3) AWS
 Amazon RDS (MySQL, PostgreSQL, MariaDB, Oracle, MS SQL Server)
 
-#### Cloud NoSQL
-
+2. NoSQL
 1) Azure - CosmosDB
 Gremlin - graph database
 MongoDB - document
@@ -271,10 +260,9 @@ Neptune - graph
 Time stream - time series
 
 #### ETL & ELT
-One advantage of doing ELT over ETL is the ability to load large amounts of data quickly. One excellent example of this is ingesting streaming data.
 
 ETL: happens on an intermediate server
-ELT: happens on the destination server
+ELT: load large amounts of data quickly, especially for streaming data. happens on the destination server
 
 Available ETL/ELT tools:
 
@@ -293,12 +281,11 @@ data warehouse tools
 - Amazon Redshift
 - GCP Big Query
 
-
 ### Azure Data Warehouse
 advantages over other cloud providers:
-- When the data infrastructure already contains Microsoft technologies such as Microsoft SQL Server
-- When an on premise solution needs to be moved to the cloud for scaling
-- When you have large amounts of data that need an ELT solution to quickly ingest data from a wide variety of sources
+- Integration with Azure Ecosystem
+- On-Demand scaling of compute power
+- Ingest data from a wide variety of sources
 
 Architecture
 
@@ -309,46 +296,41 @@ The Ingestion and Storage steps can be  orchestrated using Azure Data Factory.
 ![](docs/Azure_data_warehouse_databricks.PNG)
 databricks is more suitable for lake house architecture.
 
-#### Cloud data storage
+Cloud data storage
 
 Azure Data Warehouse Gen 2 for traditional data warehouse architectures
 Azure Dedicated SQL Pools for relational data storage
 Blob storage for file-based storage
 CosmosDB for NoSQL solutions such as column-oriented or document databases
 
+SQL Pool
+
+- Azure Dedicated SQL Pools
+designed for large-scale, enterprise-level data warehousing workloads. It uses a provisioned resources model, where you allocate a certain amount of resources to your SQL pool and pay for those resources whether you're using them or not. It uses Massively Parallel Processing (MPP) architecture to quickly run complex queries across large amounts of data.
+- Azure Synapse Analytics Serverless SQL Pools
+This is designed for on-demand and exploratory analysis. You only pay for the queries that you run based on the amount of data processed. It's ideal for scenarios where you have unpredictable or bursty workloads, or when you're exploring data before deciding to move it to a dedicated SQL pool. It uses a shared resources model, which can be more cost-effective if your workload is intermittent or low-volume.
+
 #### ETL / ELT Pipelines
 
-Azure Data Factory for creating intelligent data integrations and data flows for multiple services
-Azure Databricks for utilizing Spark to create ETL pipelines Azure Polybase for using TSQL to query blob storage in support of ELT scenarios
+Azure Data Factory: creating data integrations and data flows for multiple services
+Azure Databricks: utilizing Spark to create ETL pipelines 
+Azure Polybase: using TSQL to query blob storage in support of ELT scenarios
 ![](docs/ELT_pipeline.PNG)
-SQL to SQL ELT in Azure involves:
-- Starting with data ingested into either Blob Storage or Azure Delta Lake Gen 2
+steps: 
+- data ingestion into Blob Storage or Azure Delta Lake Gen 2
 - Create EXTERNAL staging tables in the Data Warehouse
 - Transform data from staging tables to DW tables
 
 #### Ingesting Data
 ![](docs/Ingestion.PNG)
-Ingesting data at scale into Azure Synapse involves:
+Ingesting datainto Azure Synapse:
 
 - Creating linked services
     - a linked service contains connection information to other services
 - Creating a pipeline
     - A pipeline contains the logical flow for an execution of a set of activities
 - Using a trigger or a one-time data ingestion
-    - You can manually start a data ingestion or you can schedule a trigger
-
-#### SQL Pool
-1) Azure Dedicated SQL Pools
-
-    Dedicated SQL pools are designed to provide a high-performance, scalable, and cost-effective solution for big data workloads. They utilize a Massively Parallel Processing (MPP) architecture. This architecture enables users to perform queries faster, especially for complex analytical queries. Dedicated SQL pools are provisioned with a fixed amount of resources and are billed based on the resources allocated, regardless of usage.
-
-    - In a Synapse Analytics production data warehouse, you likely would use Dedicated SQL Pools.
-2) Azure Synapse Analytics Serverless SQL Pools
-
-    Serverless SQL pools provide a pay-per-query model, which means you only pay for the resources used by each executed query. They are designed to handle both small and large-scale data processing tasks and can automatically scale resources based on workload requirements. Serverless SQL pools do not require any upfront provisioning or resource allocation. for Synapse the serverless SQL Pool is recommended.
-
-    - For development workloads, ad-hoc querying, or volatile workloads, you can use serverless SQL pools.
-    - Use Serverless SQL pools if you are using the Udacity Azure Cloud Lab.
+    -  manually start a data ingestion or schedule a trigger
 
 ## Data Lake
 - Data warehouses are based on specific and explicit data structures that allow for highly performant business intelligence and analytics but they do not perform well with unstructured data.
