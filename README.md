@@ -113,6 +113,7 @@ advantages:
 - high availability
 - able to store different data type formats
 - low latency for distributed users
+
 disadvantages:
 - not ACID compliance
 - JOINS is not allowed(as it results in full table scan)
@@ -142,13 +143,14 @@ Since Apache Cassandra requires data modeling based on the query you want, you c
 1) Keyspace
 same as database
 2) PRIMARY KEY
-made up of PARTITION KEY, or include additional CLUSTERING COLUMNS
+primary key in Cassandra consists of two parts: the partition key and the clustering columns. The partition key determines which node stores the data. The clustering columns determine the order of the data inside the partition.
+Primary key has to be unique, otherwise data will be overwritten!!
 3) PARTITION KEY
 
 4) CLUSTERING COLUMNS
 - clustering columns sort data in ascending order
-- none or more than one clusering columns can be added
-- using CLUSTERING COLUMNS in same order in SELECTas they were in WHERE clause
+- none or more than one clusering columns can be used
+- using CLUSTERING COLUMNS in same order in SELECT as they were in WHERE clause
 5) ALLOW FILTERING
 support query without specifying all the primary keys, but it is not recommended 
 6) all placeholder should be %s when using session.execute(even if the data type is int)
