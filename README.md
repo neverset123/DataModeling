@@ -1,4 +1,4 @@
-## sql database
+## SQL database
 database is a collection of tables, each talbe represents one entity type.
 
 advantages:
@@ -32,6 +32,67 @@ Transactions are processed independently and securely, order does not matter.
 - Durability
 Completed transactions are saved to database even in cases of system failure
 
+
+### OLAP(Online Analytical Processing) & OLTP(Online Transactional Processing)
+one database for all would lead to 
+
+    - excellent for operation
+    - no redundancy, high integrity
+    - slow for analytics
+    - hard to understand
+#### OLAP
+optimized for these workloads allow for complex analytical and ad hoc queries, including aggregations. These type of databases are optimized for reads.
+
+#### OLTP
+optimized for these workloads allow for less complex queries in large volume. The types of queries for these databases are read, insert, update, and delete.
+
+### Normalizaiton & Denormalization
+1) Normalization: increase data integrity by reducing data redundancy
+2) Denormalizaiton: increase performance by reducing number of joins 
+
+#### normalization
+- 1NF
+    - Atomic values: each cell contains unique and single values
+    - Be able to add data without altering tables(adding or removing columns)
+    - Separate different relations into different tables
+    - Keep relationships between tables together with foreign keys
+- 2NF
+    - Have reached 1NF
+    - All columns in the table must rely on the Primary Key(so that data can be joined)
+- 3NF
+    - Must be in 2nd Normal Form
+    - No transitive dependencies(non-key column does not depend on another non-key column)
+    - Remember, transitive dependencies you are trying to maintain is that to get from A-> C, you want to avoid going through B.
+
+#### denormalization
+denormalization comes after normalization.
+
+### Fact & Dimension Table
+
+#### Fact Table(Numeric & Additive)
+Fact table records business events in quantifiable metrics.
+
+#### Dimension Table
+records context of business events (who, what, where, why etc.), it contains descriptive attributes.
+
+### Schema Struct
+- Star Schema
+ consists of one of more fact tables referencing any number of dimension tables.
+ advantages:
+    - denormalized
+    - simplifies queries by relaxation of 3nf rules
+    - fast aggregations (less joins)
+drawbacks:
+    - data Integrity issue
+    - decrease query flexibility(no ad-hoc query)
+    - many to many relationship is a simplification
+
+- snowflake Schema
+    - Star Schema is a special, simplified case of the snowflake schema.
+    - Star schema does not allow for many to many relationships between dimension tables while the snowflake schema does.
+    - Snowflake schema is more normalized than Star schema but only in 1NF or 2NF
+
+
 ### Postgres
 1) autocommit
 each action  is commited without having to cann conn.commit() after each command
@@ -60,6 +121,12 @@ disadvantages:
 - flexible queries are not supported
 - overhead for small dataset
 
+### CAP theorem 
+a database can actually only guarantee two out of the three in CAP
+- Consistency: every read from database gets the latest piece of data or an error(differt from ACID consistency)
+- Availability
+- partition Tolerance
+
 
 ### types of implementation
 some NoSQL databases that offer some form of ACID transaction, such as MongoDB
@@ -70,10 +137,378 @@ some NoSQL databases that offer some form of ACID transaction, such as MongoDB
 - Neo4J (Graph Database)
 
 ### Cassandra
+open source NoSQL DB, marsterless architecture, linear scalable. it support AP of CAP.
 Since Apache Cassandra requires data modeling based on the query you want, you can't do ad-hoc queries.
 1) Keyspace
 same as database
-2) all placeholder should be %s when using session.execute(even if the data type is int)
+2) PRIMARY KEY
+made up of PARTITION KEY, or include additional CLUSTERING COLUMNS
+3) PARTITION KEY
+
+4) CLUSTERING COLUMNS
+- clustering columns sort data in ascending order
+- none or more than one clusering columns can be added
+- using CLUSTERING COLUMNS in same order in SELECTas they were in WHERE clause
+5) ALLOW FILTERING
+support query without specifying all the primary keys, but it is not recommended 
+6) all placeholder should be %s when using session.execute(even if the data type is int)
+7) denormalizaiton is a must in Cassandra, as there is no JOINs in Cassandra
+8) one table per query
+
+#### CQL
+JOIN, GROUP BY, Subquery are not supported.
 
 
+## data warehouse
+is OLAP system, is a copy of transaction data specifically structured for query and analysis.
+data struct for data warehouse
+    - dimensional model
+    could be different from traditional dimension table. Star schema is an good option for OLAP, not OLTP(too many joins), and it is easier to understand than 3NF Schema.
+    
+    - 
+### SQL ETL
+
+- Extract
+query 3NF DB, 比如select
+- Transform
+join talbes, change types, add new columns, 比如EXTRACT, JOIN
+- Loading
+insert into facts and dimensions tables, 比如INSERT
+
+#### ipython-sql in jupyter
+- %sql
+one line sql query, can access python var using $
+- %%sql
+multi-line sql query, can not access python var using $
+
+```
+%sql postgresql://student:student@127.0.0.1:5432/pagila
+``` 
+
+### Architecture
+
+#### Kimball's Bus Architecture
+![](docs/Kimball_bus.png)
+- uses conformed dimensions
+- both atomic and summary data
+- it is dimensional
+
+#### Independent data marts
+![](docs/Data_marts.png)
+- independent ETL processes and dimensional models
+- seperate and smaller dimensional models
+- different fact tables for same events
+- inconsistent views
+- it is generally discouraged
+
+#### Inmon's Corporate Information Factory(CIF)
+![](docs/CIF.PNG)
+- 2 ETL Process
+- 3NF as enterprise-wide data store, accessable by end-user
+- data marts are dimnesionally modeled and mostly aggregated
+
+#### Hybrid Kimball Bus & Inmon CIF
+![](docs/Hybrid.png)
+- Removes Data Marts
+- Exposes the enterprise data warehouse
+
+
+### OLAP Cubes
+an aggregation of a fact metric on a number of dimensions. the OLAP cubes should store the finest grain of data.
+using **grouping sets ()** or **cube()** could optimize query with only one pass through facts tables instead of multi.
+
+#### Operations
+1) Rollup
+Roll-up: Sum up the sales of each city by Country: e.g. US, France (less columns in branch dimension)
+
+2) Drill-down
+Drill-Down: Decompose the sales of each city into smaller districts (more columns in branch dimension)
+
+3) Slice
+Slice: Reducing N dimensions to N-1 dimensions by restricting **one** dimension to a single value
+
+4) Dice
+Dice: computing a sub-cube by restricting **multi** dimensions
+
+#### cubes approaches
+1) MOLAP
+pre-aggregate the OLAP cubes and saves them on a special purpose non-relational database
+
+2) ROLAP
+compute the OLAP cubes on teh fly from existing relational databases where dimensional model resides. (using column format is more efficient, possible extension is cstore-fdw)
+
+
+### Cloud Data Warehouse
+#### Cloud SQL
+managed databases mean that the user doesn't have to manage the hardware resources to gain optimal performance.
+1) Microsoft Azure
+Azure SQL Database (MS SQL Server)
+Azure Database for MySQL
+Azure Database for MariaDB
+Azure Database for PostgreSQL
+2) GCP
+Cloud SQL (MySQL, PostgreSQL, and MS SQL Server)
+3) AWS
+Amazon RDS (MySQL, PostgreSQL, MariaDB, Oracle, MS SQL Server)
+
+#### Cloud NoSQL
+
+1) Azure - CosmosDB
+Gremlin - graph database
+MongoDB - document
+Cassandra - column oriented
+2) GCP
+Big Table - column oriented
+Firestore - document
+MongoDB Atlas - document
+3) AWS
+DynamoDB - Key value
+DocumentDB - document
+Keyspaces = column oriented
+Neptune - graph
+Time stream - time series
+
+#### ETL & ELT
+One advantage of doing ELT over ETL is the ability to load large amounts of data quickly. One excellent example of this is ingesting streaming data.
+
+ETL: happens on an intermediate server
+ELT: happens on the destination server
+
+Available ETL/ELT tools:
+
+- Azure Data Factory
+- AWS Glue
+- GCP Dataflow
+
+Data ingestion tools:
+
+- Azure - Streaming Analytics
+- AWS - Kinesis
+- GCP - Dataflow
+
+data warehouse tools
+- Azure Synapse
+- Amazon Redshift
+- GCP Big Query
+
+
+### Azure Data Warehouse
+advantages over other cloud providers:
+- When the data infrastructure already contains Microsoft technologies such as Microsoft SQL Server
+- When an on premise solution needs to be moved to the cloud for scaling
+- When you have large amounts of data that need an ELT solution to quickly ingest data from a wide variety of sources
+
+Architecture
+
+1) based on azure synapse for comprehensive integrated data warehousing and analytics
+![](docs/Azure_data_warehouse.PNG)
+The Ingestion and Storage steps can be  orchestrated using Azure Data Factory.
+2) Azure databricks for analytics built on Apache Spark
+![](docs/Azure_data_warehouse_databricks.PNG)
+databricks is more suitable for lake house architecture.
+
+#### Cloud data storage
+
+Azure Data Warehouse Gen 2 for traditional data warehouse architectures
+Azure Dedicated SQL Pools for relational data storage
+Blob storage for file-based storage
+CosmosDB for NoSQL solutions such as column-oriented or document databases
+
+#### ETL / ELT Pipelines
+
+Azure Data Factory for creating intelligent data integrations and data flows for multiple services
+Azure Databricks for utilizing Spark to create ETL pipelines Azure Polybase for using TSQL to query blob storage in support of ELT scenarios
+![](docs/ELT_pipeline.PNG)
+SQL to SQL ELT in Azure involves:
+- Starting with data ingested into either Blob Storage or Azure Delta Lake Gen 2
+- Create EXTERNAL staging tables in the Data Warehouse
+- Transform data from staging tables to DW tables
+
+#### Ingesting Data
+![](docs/Ingestion.PNG)
+Ingesting data at scale into Azure Synapse involves:
+
+- Creating linked services
+    - a linked service contains connection information to other services
+- Creating a pipeline
+    - A pipeline contains the logical flow for an execution of a set of activities
+- Using a trigger or a one-time data ingestion
+    - You can manually start a data ingestion or you can schedule a trigger
+
+#### SQL Pool
+1) Azure Dedicated SQL Pools
+
+    Dedicated SQL pools are designed to provide a high-performance, scalable, and cost-effective solution for big data workloads. They utilize a Massively Parallel Processing (MPP) architecture. This architecture enables users to perform queries faster, especially for complex analytical queries. Dedicated SQL pools are provisioned with a fixed amount of resources and are billed based on the resources allocated, regardless of usage.
+
+    - In a Synapse Analytics production data warehouse, you likely would use Dedicated SQL Pools.
+2) Azure Synapse Analytics Serverless SQL Pools
+
+    Serverless SQL pools provide a pay-per-query model, which means you only pay for the resources used by each executed query. They are designed to handle both small and large-scale data processing tasks and can automatically scale resources based on workload requirements. Serverless SQL pools do not require any upfront provisioning or resource allocation. for Synapse the serverless SQL Pool is recommended.
+
+    - For development workloads, ad-hoc querying, or volatile workloads, you can use serverless SQL pools.
+    - Use Serverless SQL pools if you are using the Udacity Azure Cloud Lab.
+
+## Data Lake
+- Data warehouses are based on specific and explicit data structures that allow for highly performant business intelligence and analytics but they do not perform well with unstructured data.
+
+- Data lakes are capable of ingesting massive amounts of both structured and unstructured data with Hadoop and Spark providing processing on top of these datasets. Data lakes have several shortcomings that grew out of their flexibility. They are unable to support transactions and perform poorly with changing datasets. Data governance became difficult due to the unstructured nature of these systems.
+    - Lower costs associated with using big data tools for ETL / ELT operations.
+    - Data lakes provide schema-on-read rather than schema-on-write which lowers the cost and work of ingesting large amounts of data.
+    - Data lakes provide support for structured, semi-structured, and unstructured data.
+- Modern lakehouse architectures seek to combine the strengths of data warehouses and data lakes into a single, powerful architecture. One of the important features of a lakehouse architecture is the ability to quickly ingest large amounts of data and then incrementally improve the quality of the data.
+    - a metadata and data governance layer on top of the data lake
+
+![](docs/datalake.PNG)
+
+### hadoop
+![](docs/data_lake.PNG)
+
+hadoop is an ecosystem of tools for big data storage and data analysis, consists of Hadoop Distributed File System(HDFS) and MapReduce (in general means of hadoop). 
+- The major difference between Spark and Hadoop is how they use memory. Hadoop writes intermediate results to disk whereas Spark tries to keep data in memory whenever possible. This makes Spark faster for many use cases.
+- The Hadoop ecosystem includes a distributed file storage system called HDFS (Hadoop Distributed File System). Spark, on the other hand, does not include a file storage system. You can use Spark on top of HDFS but you do not have to. Spark can read in data from other sources as well.
+
+
+Apache Pig: a SQL-like language that runs on top of Hadoop MapReduce
+Apache Hive: another SQL-like interface that runs on top of Hadoop MapReduce
+
+HDFS splits files into 64 or 128 megabyte blocks and replicates these blocks across the cluster.
+
+#### MapReduce
+MapReduce is a programming technique for manipulating large data sets. "Hadoop MapReduce" is a specific implementation of this programming technique.
+
+- first dividing up a large dataset and distributing the data across a cluster. 
+- In the map step, each data is analyzed and converted into a (key, value) pair. Then these key-value pairs are shuffled across the cluster so that all keys are on the same machine. 
+- In the reduce step, the values with the same keys are combined together.
+
+#### Spark
+- The master node is responsible for orchestrating the tasks across the cluster
+- Workers are performing the actual computations
+
+weakness:
+- Spark Streaming’s latency is at least 500 milliseconds since it operates on micro-batches of records.
+- Spark only supports ML algorithms that scale linearly with the input data size
+
+
+1) pure function
+functions that preserve their inputs and avoid side effects, these are called pure functions.
+Spark function makes a copy of its input data and never changes the original parent data.
+
+2) lazy evaluation
+Before Spark does anything with the data in your program, it first built Directed Acyclic Graph (DAG) of what functions and data it will need.
+
+3) map
+Maps simply make a copy of the original input data, and transform that copy according to whatever function you put inside the map.
+
+4) programming
+- Imperative programming-->how
+- Ceclarative programming-->what
+
+5) shuffle (different from ML shuffle)
+Shuffling is the process of redistributing data across partitions that may cause data to be moved across the network and between executors. This is often a costly operation and can have a significant impact on performance. Shuffling can occur during operations like join, groupByKey, reduceByKey, repartition.
+
+##### spark debugging and optimization
+Spark makes a copy of the input data every time you call a function. So, the original debugging variables that you created won't actually get loaded into the worker nodes. Instead, each worker has their own copy of these variables, and only these copies get modified.
+1) Accumulator can be used to help tracking errors.
+2) Broadcast variable is a read-only variable to all worker nodes for use in one or more operations,  used to save the cost of shipping a large read-only lookup table to every node. 
+
+##### Transformations and Actions
+
+##### Data Skew
+solution: partition the data to change workload on worker node.
+- Assign a new, temporary partition key(new column or composite key)
+- Repartition by number of Spark workers
+df.repartition(number_of_workers)
+
+
+### Databricks
+1) Azure Databricks is used to prepare, train, process, and transform data for use in Azure Synapse Analytics or Microsoft Power BI.
+![](docs/databricks.PNG)
+
+2) Databricks provides data flows and processing, and can even be used to prepare data for machine learning solutions.
+![](docs/databricks1.PNG)
+
+### Data lakes and Lakehouse
+
+#### Azure Data Lake Gen 2
+- Incorporates and extends Azure Blob Storage.
+- Hierarchical namespaces to enable the better organization of information
+- The entire structure is accessible using Hadoop compatible APIs.
+
+#### Delta Lake
+![](docs/delta_lake.PNG)
+
+stages for data processing:
+- Bronze Stage: ingesting raw into ingestion table
+- Silver Stage: data are refined and combined
+- Gold Stage: creation of features and aggregates such as star schema's fact and dimension tables.
+
+## Data Pipeline
+logical grouping of various activities such as data movement, data transformation and control flow. Activities include Copy data activity, Dataflow activity and Control flow activity.
+Tools in Azure provide cloud-based code-free ETL (or ELT) as a service to orchestrate the data movement between 100+ data sources (azure, external DB, File in AWS or GCP, NoSQL, Services and Apps...) at petabyte scale.
+- Azure Data Factory
+- Synapse Analytics
+while both services can create pipelines for data movement and transformation, Azure Synapse Analytics also includes features for data warehousing and analytics.
+Azure Data Factory supports cross-region Integration Runtimes but Synapse Analytics does not.
+
+### Components
+1) linked service
+Linked Service is a pipeline component that contains the connection information needed to connect to a data source.
+
+2) Datasets
+simply points to data source objects that are to be used in Dataflows. It can only be created after linked services
+
+3) Integration Runtimes(IR)
+the compute leveraged to perform all the data integration activities in ADF or Synapse Pipelines
+- Azure IR: Perform data flows, data movement between cloud data stores. It can also be used to dispatch activities to external compute such as Databricks, .NET activity, SQL Server Stored Procedure etc. that are in public network or using private network link. Azure IR is fully managed, serverless compute.
+- Self-hosted IR (SHIR): SHIR is used to perform data movement between a cloud data stores and a data store in private network. It can also be used to dispatch activities to external computes on-premises or Azure Virtual Network. These computes include HDInsight Hive, SQL Server Stored Procedure activity etc.
+- Azure-SSIS IR: This is used to lift and shift the existing SSIS packages to execute in Azure.
+
+
+### Transforming Data
+Synapse can build pipeline with Data Flows or Databricks Notebook or Power Query, and trigger run on selected data.
+
+#### Mapping Data Flows
+Mapping Data Flows are activities that perform the data extraction from the data stores and then transform and store the transformed data to the destination data store. Data Flows are integrated with the Visual Expression Builder in Azure Data Factory to perform transformation logic as simple expressions in Spark.
+
+- Schema modifiers: These transformations allow us to manipulate the data to create new derived columns based on calculations, aggregate data, or pivoting the data etc.
+- Row modifiers: These transformations allow us to change rows for e.g. filtering rows, sort rows, alter row based on insert/update/delete/upsert policies.
+- Multiple inputs/outputs: These transformations allow us to generate new data with joins, unions, or splitting the data.
+
+#### Power Query
+Power Query is a data transformation engine with a powerful and easy to use interface to connect to the data sources, extract and transform the data. Power Query engine uses a scripting language called M. Since Azure Data Factory uses Apache Spark behind the scene, when the Power Query is inserted into the pipeline, the M language data types are automatically convert into Spark data types.
+- code-free agile data preparation and wrangling at cloud scale
+- embedded excel into the ADF UI and Macro like recording of the transformations
+- Easy to use tool for non-technical users
+
+
+### Data Quality
+Data Governance describes strategies for tracking data lineage through a system, knowing who it’s available to, and understanding the catalog of data available to the business. Data quality is a description of optimizing data so that it is complete, timely and consistent.
+Azure Purview is a data governance service on Azure to help organizations to empower its employees to discovery data quickly, classify data and as well as see the data lineage from source to destination. This is possible because Purview creates data map of data estate with the datasets and their relationships and stores the corresponding metadata.
+#### Optimize Dataflows
+- Tuning Integration Runtime Live time to avoid spin off the cluster during concurrent jobs
+- Partition data during transformation
+- Enable Schema Drift in the Data Flows
+
+#### Slowly Changing Dimensions
+
+Type 0: Ignore any changes and keep only the original values
+Type 1: Overwrite the existing values with new values
+Type 2: Add a new row with the new values and add a new version column that identifies current and prior version.
+Type 3: Add new columns for the new values. Like Current_Phone_Number and Original_Phone Number
+Type 4: Maintain all the historical values in a new History table.
+Type 5: This an extension of Type 4 where a mini-dimension table is created by maintaining the keys.
+Type 6: This is a combination of Type 1, Type 2 and Type 3. This adds a new record for new values and also maintains a new column.
+
+#### Production
+1) parameters
+- Parameterize can be created inside linked services to pass dynamic values for database, username etc.
+- Pipeline Parameters: Define parameters inside the Pipelines and Data Flows and use inside the expressions activities from data extraction to sink
+- Global parameters are global in the data factory environment, meaning they can be utilized by all pipelines and can be passed to data flows. 
+- System Variables: Azure Data Factory and Synapse Workspace provide System Variables, such as @pipeline().DataFactory, @pipeline().RunId, @trigger().startTime.
+
+2) creating ADF programmatically
+
+3) CICD
+![](docs/CICD.png)
+using Azure DevOps or Github or ARM Template.
 
