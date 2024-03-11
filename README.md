@@ -1,5 +1,6 @@
 ## SQL database
 database is a collection of tables, each talbe represents one entity type.
+a very popular example database is Sakila in Star Schema.
 
 advantages:
 - ease of use SQL
@@ -77,7 +78,7 @@ records context of business events (who, what, where, why etc.), it contains des
 
 ### Schema Struct
 - Star Schema
- consists of one of more fact tables referencing any number of dimension tables.
+ consists of one or more fact tables referencing any number of dimension tables.
  advantages:
     - denormalized
     - simplifies queries by relaxation of 3nf rules
@@ -167,12 +168,14 @@ data struct for data warehouse
     could be different from traditional dimension table. Star schema is a good option for OLAP, not OLTP(too many joins), it is easier to understand than 3NF Schema.
 
 tips for ipython-sql in jupyter
+-%load-ext sql
 - %sql
 one line sql query, can access python var using $
 - %%sql
 multi-line sql query, can not access python var using $
 
 ```
+#connect to database
 %sql postgresql://student:student@127.0.0.1:5432/pagila
 ``` 
 
@@ -209,11 +212,10 @@ an aggregation of a fact metric on a number of dimensions. the OLAP cubes should
 using **grouping sets ()** or **cube()** could optimize query with only one pass through facts tables instead of multi.
 
 1) MOLAP
-data is stored in a multidimensional cube.MOLAP is optimized for fast data retrieval, and is efficient for slicing and dicing operations. It can perform complex calculations ahead of time during the cube creation process.
+Pre-aggregate the OLAP cubes and saves them on a special purpose non-relational database.
 
 2) ROLAP
 compute the OLAP cubes on the fly from existing relational databases where dimensional model resides. 
-using column format is more efficient, possible extension is cstore-fdw
 
 #### Operations
 1) Rollup
@@ -291,17 +293,10 @@ Architecture
 
 1) based on azure synapse for comprehensive integrated data warehousing and analytics
 ![](docs/Azure_data_warehouse.PNG)
-The Ingestion and Storage steps can be  orchestrated using Azure Data Factory.
+this architecture design can be  automated with Azure Data Factory, creating data integrations and data flows for multiple services.
 2) Azure databricks for analytics built on Apache Spark
 ![](docs/Azure_data_warehouse_databricks.PNG)
-databricks is more suitable for lake house architecture.
-
-Cloud data storage
-
-Azure Data Warehouse Gen 2 for traditional data warehouse architectures
-Azure Dedicated SQL Pools for relational data storage
-Blob storage for file-based storage
-CosmosDB for NoSQL solutions such as column-oriented or document databases
+databricks utilizes Spark to create ETL pipelines, is more suitable for lake house architecture.
 
 SQL Pool
 
@@ -310,20 +305,8 @@ designed for large-scale, enterprise-level data warehousing workloads. It uses a
 - Azure Synapse Analytics Serverless SQL Pools
 This is designed for on-demand and exploratory analysis. You only pay for the queries that you run based on the amount of data processed. It's ideal for scenarios where you have unpredictable or bursty workloads, or when you're exploring data before deciding to move it to a dedicated SQL pool. It uses a shared resources model, which can be more cost-effective if your workload is intermittent or low-volume.
 
-#### ETL / ELT Pipelines
-
-Azure Data Factory: creating data integrations and data flows for multiple services
-Azure Databricks: utilizing Spark to create ETL pipelines 
-Azure Polybase: using TSQL to query blob storage in support of ELT scenarios
-![](docs/ELT_pipeline.PNG)
-steps: 
-- data ingestion into Blob Storage or Azure Delta Lake Gen 2
-- Create EXTERNAL staging tables in the Data Warehouse
-- Transform data from staging tables to DW tables
-
-#### Ingesting Data
+Ingesting Data into Azure Synapse:
 ![](docs/Ingestion.PNG)
-Ingesting datainto Azure Synapse:
 
 - Creating linked services
     - a linked service contains connection information to other services
@@ -331,6 +314,15 @@ Ingesting datainto Azure Synapse:
     - A pipeline contains the logical flow for an execution of a set of activities
 - Using a trigger or a one-time data ingestion
     -  manually start a data ingestion or schedule a trigger
+
+#### ETL / ELT Pipelines (utilizing SQL)
+**Azure Polybase**: using TSQL to query blob storage in support of ELT scenarios
+![](docs/ELT_pipeline.PNG)
+steps: 
+- Extract: Data ingestion into Blob Storage or Azure Data Lake Gen 2
+- Load: Create EXTERNAL staging tables in the Data Warehouse
+    - Azure Synapse cannot convert string to datetime!!
+- Transform: Transform data from staging tables to DW tables
 
 ## Data Lake
 - Data warehouses are based on specific and explicit data structures that allow for highly performant business intelligence and analytics but they do not perform well with unstructured data.
