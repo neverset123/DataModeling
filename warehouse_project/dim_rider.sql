@@ -22,7 +22,7 @@ WITH (
     FILE_FORMAT = [SynapseDelimitedTextFormat]
 )  
 AS
-SELECT [rider_id], [first]+[last] AS name, [is_member], DATEDIFF(YEAR, birthday,  TRY_CONVERT(DATETIME, SUBSTRING(account_start_date, 1, LEN(account_start_date)-4), 120)) AS age
+SELECT [rider_id], [first]+[last] AS name, [is_member], DATEDIFF(YEAR, birthday,  TRY_CONVERT(DATETIME, SUBSTRING(account_start_date, 1, LEN(account_start_date)-4), 120)) AS age_at_account_start
 FROM [dbo].[staging_rider];
 GO
 

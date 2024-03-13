@@ -22,8 +22,8 @@ WITH (
     FILE_FORMAT = [SynapseDelimitedTextFormat]
 )  
 AS
-SELECT [trip_id], DATEDIFF(MINUTE, TRY_CONVERT(DATETIME, SUBSTRING(start_at, 1, LEN(start_at)-4), 120),  TRY_CONVERT(DATETIME, SUBSTRING(ended_at, 1, LEN(start_at)-4), 120)) AS trip_duration_min, [rider_id], [start_station_id], [end_station_id], REPLACE(SUBSTRING(start_at, 0, CHARINDEX(' ',start_at,0)), '-', '') AS date_id
-FROM [dbo].[staging_trip];
+SELECT [trip_id], DATEDIFF(MINUTE, TRY_CONVERT(DATETIME, SUBSTRING(start_at, 1, LEN(start_at)-4), 120),  TRY_CONVERT(DATETIME, SUBSTRING(ended_at, 1, LEN(start_at)-4), 120)) AS trip_duration_min,  [dbo].[staging_trip].[rider_id], [start_station_id], [end_station_id], REPLACE(SUBSTRING(start_at, 0, CHARINDEX(' ',start_at,0)), '-', '') AS date_id, DATEDIFF(YEAR, birthday, TRY_CONVERT(DATETIME, SUBSTRING(start_at, 1, LEN(start_at)-4), 120)) AS age_at_trip
+FROM [dbo].[staging_trip] LEFT JOIN [dbo].[staging_rider]  on [dbo].[staging_trip].rider_id = [dbo].[staging_rider].rider_id;
 GO
 
 SELECT TOP 100 * FROM dbo.fact_trip

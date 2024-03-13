@@ -22,10 +22,15 @@ WITH (
     FILE_FORMAT = [SynapseDelimitedTextFormat]
 )  
 AS
-SELECT REPLACE(SUBSTRING(date, 0, CHARINDEX(' ',date,0)), '-', '') AS date_id, YEAR(TRY_CONVERT(DATETIME, SUBSTRING(date, 1, LEN(date)-4), 120)) AS year, DATEPART(QUARTER, TRY_CONVERT(DATETIME, SUBSTRING(date, 1, LEN(date)-4), 120)) AS quarter, MONTH(TRY_CONVERT(DATETIME, SUBSTRING(date, 1, LEN(date)-4), 120)) AS month, DAY(TRY_CONVERT(DATETIME, SUBSTRING(date, 1, LEN(date)-4), 120)) AS day, DATEPART(WEEK, TRY_CONVERT(DATETIME, SUBSTRING(date, 1, LEN(date)-4), 120)) AS week
-FROM [dbo].[staging_payment];
+SELECT REPLACE(SUBSTRING(date, 0, CHARINDEX(' ',date,0)), '-', '') AS date_id,  YEAR(TRY_CONVERT(DATETIME, SUBSTRING(date, 1, LEN(date)-4), 120)) AS year, DATEPART(QUARTER, TRY_CONVERT(DATETIME, SUBSTRING(date, 1, LEN(date)-4), 120)) AS quarter, MONTH(TRY_CONVERT(DATETIME, SUBSTRING(date, 1, LEN(date)-4), 120)) AS month, DAY(TRY_CONVERT(DATETIME, SUBSTRING(date, 1, LEN(date)-4), 120)) AS day, DATEPART(dw, TRY_CONVERT(DATETIME, SUBSTRING(date, 1, LEN(date)-4), 120)) AS weekday
+FROM [dbo].[staging_payment]
+UNION
+SELECT REPLACE(SUBSTRING(start_at, 0, CHARINDEX(' ',start_at,0)), '-', '') AS date_id, YEAR(TRY_CONVERT(DATETIME, SUBSTRING(start_at, 1, LEN(start_at)-4), 120)) AS year, DATEPART(QUARTER, TRY_CONVERT(DATETIME, SUBSTRING(start_at, 1, LEN(start_at)-4), 120)) AS quarter, MONTH(TRY_CONVERT(DATETIME, SUBSTRING(start_at, 1, LEN(start_at)-4), 120)) AS month, DAY(TRY_CONVERT(DATETIME, SUBSTRING(start_at, 1, LEN(start_at)-4), 120)) AS day, DATEPART(dw, TRY_CONVERT(DATETIME, SUBSTRING(start_at, 1, LEN(start_at)-4), 120)) AS weekday
+FROM [dbo].[staging_trip]
+UNION
+SELECT REPLACE(SUBSTRING(ended_at, 0, CHARINDEX(' ',ended_at,0)), '-', '') AS date_id, YEAR(TRY_CONVERT(DATETIME, SUBSTRING(ended_at, 1, LEN(ended_at)-4), 120)) AS year, DATEPART(QUARTER, TRY_CONVERT(DATETIME, SUBSTRING(ended_at, 1, LEN(ended_at)-4), 120)) AS quarter, MONTH(TRY_CONVERT(DATETIME, SUBSTRING(ended_at, 1, LEN(ended_at)-4), 120)) AS month, DAY(TRY_CONVERT(DATETIME, SUBSTRING(ended_at, 1, LEN(ended_at)-4), 120)) AS day, DATEPART(dw, TRY_CONVERT(DATETIME, SUBSTRING(ended_at, 1, LEN(ended_at)-4), 120)) AS weekday
+FROM [dbo].[staging_trip];
 GO
-
 
 SELECT TOP 100 * FROM dbo.dim_date
 GO
