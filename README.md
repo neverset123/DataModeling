@@ -327,22 +327,43 @@ steps:
 ## Data Lake
 - Data warehouses are based on specific and explicit data structures that allow for highly performant business intelligence and analytics but they do not perform well with unstructured data.
 
-- Data lakes are capable of ingesting massive amounts of both structured and unstructured data with Hadoop and Spark providing processing on top of these datasets. Data lakes have several shortcomings that grew out of their flexibility. They are unable to support transactions and perform poorly with changing datasets. Data governance became difficult due to the unstructured nature of these systems.
+- Data lakes are capable of ingesting massive amounts of both structured and unstructured data with Hadoop and Spark providing processing on top of these datasets. Data lakes are unable to support transactions and perform poorly with changing datasets. Data governance became difficult due to the unstructured nature of these systems.
     - Lower costs associated with using big data tools for ETL / ELT operations.
     - Data lakes provide schema-on-read rather than schema-on-write which lowers the cost and work of ingesting large amounts of data.
     - Data lakes provide support for structured, semi-structured, and unstructured data.
-- Modern lakehouse architectures seek to combine the strengths of data warehouses and data lakes into a single, powerful architecture. One of the important features of a lakehouse architecture is the ability to quickly ingest large amounts of data and then incrementally improve the quality of the data.
+- Modern lakehouse architectures combine the strengths of data warehouses and data lakes into a single, powerful architecture, which provide the ability to quickly ingest large amounts of data and then incrementally improve the quality of the data.
     - a metadata and data governance layer on top of the data lake
 
 ![](docs/datalake.PNG)
 
+Personally Identifiable Information (PII) refers to any data that could potentially identify a specific individual. This can be any information that can be used on its own or with other information to identify, contact, or locate a single person, or to identify an individual in context. 
+
+### storage
+Azure Data Lake Gen 2
+- Incorporates and extends Azure Blob Storage.
+- Hierarchical namespaces to enable the better organization of information
+- The entire structure is accessible using Hadoop compatible APIs.
+
+Delta Lake
+![](docs/delta_lake.PNG)
+Delta Lake is an open-source storage layer that brings ACID (Atomicity, Consistency, Isolation, Durability) transactions to Apache Spark and big data workloads. It's designed to provide reliability to both batch and streaming data processing, handling scenarios such as schema enforcement and evolution, and data consistency.
+- Parquet data files as partitions
+- Json files as transaction log (provide ACID transactions and isolation to spark)
+- Checkpoint file
+Caching features of delta
+- Delta Cache
+- Result Cache
+
+stages for data processing:
+- Bronze Stage: ingesting raw into ingestion table
+- Silver Stage: data are refined and combined
+- Gold Stage: creation of features and aggregates such as star schema's fact and dimension tables.
 ### hadoop
 ![](docs/data_lake.PNG)
 
 hadoop is an ecosystem of tools for big data storage and data analysis, consists of Hadoop Distributed File System(HDFS) and MapReduce (in general means of hadoop). 
 - The major difference between Spark and Hadoop is how they use memory. Hadoop writes intermediate results to disk whereas Spark tries to keep data in memory whenever possible. This makes Spark faster for many use cases.
-- The Hadoop ecosystem includes a distributed file storage system called HDFS (Hadoop Distributed File System). Spark, on the other hand, does not include a file storage system. You can use Spark on top of HDFS but you do not have to. Spark can read in data from other sources as well.
-
+- The Hadoop ecosystem includes a distributed file storage system called HDFS (Hadoop Distributed File System). Spark does not include a file storage system. You can use Spark on top of HDFS but you do not have to. Spark can read in data from other sources as well.
 
 Apache Pig: a SQL-like language that runs on top of Hadoop MapReduce
 Apache Hive: another SQL-like interface that runs on top of Hadoop MapReduce
@@ -363,7 +384,6 @@ MapReduce is a programming technique for manipulating large data sets. "Hadoop M
 weakness:
 - Spark Streaming’s latency is at least 500 milliseconds since it operates on micro-batches of records.
 - Spark only supports ML algorithms that scale linearly with the input data size
-
 
 1) pure function
 functions that preserve their inputs and avoid side effects, these are called pure functions.
@@ -395,77 +415,73 @@ solution: partition the data to change workload on worker node.
 - Repartition by number of Spark workers
 df.repartition(number_of_workers)
 
-
-### Databricks
+#### Databricks
 1) Azure Databricks is used to prepare, train, process, and transform data for use in Azure Synapse Analytics or Microsoft Power BI.
 ![](docs/databricks.PNG)
 
-2) Databricks provides data flows and processing, and can even be used to prepare data for machine learning solutions.
+2) Databricks provides data flows and processing, and preparing data for machine learning solutions.
 ![](docs/databricks1.PNG)
 
-### Data lakes and Lakehouse
-
-#### Azure Data Lake Gen 2
-- Incorporates and extends Azure Blob Storage.
-- Hierarchical namespaces to enable the better organization of information
-- The entire structure is accessible using Hadoop compatible APIs.
-
-#### Delta Lake
-![](docs/delta_lake.PNG)
-
-stages for data processing:
-- Bronze Stage: ingesting raw into ingestion table
-- Silver Stage: data are refined and combined
-- Gold Stage: creation of features and aggregates such as star schema's fact and dimension tables.
-
 ## Data Pipeline
-logical grouping of various activities such as data movement, data transformation and control flow. Activities include Copy data activity, Dataflow activity and Control flow activity.
-Tools in Azure provide cloud-based code-free ETL (or ELT) as a service to orchestrate the data movement between 100+ data sources (azure, external DB, File in AWS or GCP, NoSQL, Services and Apps...) at petabyte scale.
+- data movement
+- data transformation
+- control flow. 
+
+Tools in Azure:
 - Azure Data Factory
 - Synapse Analytics
 while both services can create pipelines for data movement and transformation, Azure Synapse Analytics also includes features for data warehousing and analytics.
 Azure Data Factory supports cross-region Integration Runtimes but Synapse Analytics does not.
 
+building pipeline in production
+1) parameters
+- Pipeline Parameters: Define parameters inside the Pipelines and Data Flows and use inside the expressions activities from data extraction to sink
+- Global parameters are global in the data factory environment, can be utilized by all pipelines and can be passed to data flows. 
+- System Variables: Azure Data Factory and Synapse Workspace provide System Variables, such as @pipeline().DataFactory, @pipeline().RunId, @trigger().startTime.
+
+2) creating ADF programmatically
+
+3) CICD
+![](docs/CICD.png)
+using Azure DevOps or Github or ARM Template
+
+
 ### Components
 1) linked service
-Linked Service is a pipeline component that contains the connection information needed to connect to a data source.
+contains the connection information to a data source.
 
 2) Datasets
-simply points to data source objects that are to be used in Dataflows. It can only be created after linked services
+gives a view on data source objects that are to be used in Dataflows. It can only be created after linked services
 
 3) Integration Runtimes(IR)
-the compute leveraged to perform all the data integration activities in ADF or Synapse Pipelines
-- Azure IR: Perform data flows, data movement between cloud data stores. It can also be used to dispatch activities to external compute such as Databricks, .NET activity, SQL Server Stored Procedure etc. that are in public network or using private network link. Azure IR is fully managed, serverless compute.
-- Self-hosted IR (SHIR): SHIR is used to perform data movement between a cloud data stores and a data store in private network. It can also be used to dispatch activities to external computes on-premises or Azure Virtual Network. These computes include HDInsight Hive, SQL Server Stored Procedure activity etc.
-- Azure-SSIS IR: This is used to lift and shift the existing SSIS packages to execute in Azure.
+- Azure IR: Perform data flows, data movement between cloud data stores. can also be used to dispatch activities to external compute such as Databricks, .NET activity, SQL Server Stored Procedure etc. that are in public network or using private network link. Azure IR is fully managed, serverless compute.
+- Self-hosted IR (SHIR): used to perform data movement between a cloud data stores and a data store in private network. can also be used to dispatch activities to external computes on-premises or Azure Virtual Network. These computes include HDInsight Hive, SQL Server Stored Procedure activity etc.
+- Azure-SSIS IR: used to lift and shift the existing SSIS packages to execute in Azure.
 
 
-### Transforming Data
-Synapse can build pipeline with Data Flows or Databricks Notebook or Power Query, and trigger run on selected data.
+### Mapping Data Flows
+Mapping Data Flows are activities that perform the data extraction from the data stores and then transform and store the transformed data to the destination data store. 
+- Schema modifiers: manipulate the data to create new derived columns, aggregate data, pivoting the data.
+- Row modifiers: filtering rows, sorting rows, altering row based on insert/update/delete/upsert policies.
+- Multiple inputs/outputs: joins, unions, or splitting the data#
 
-#### Mapping Data Flows
-Mapping Data Flows are activities that perform the data extraction from the data stores and then transform and store the transformed data to the destination data store. Data Flows are integrated with the Visual Expression Builder in Azure Data Factory to perform transformation logic as simple expressions in Spark.
+Azure Data Factory use Expression Builder to perform transformation logic.
 
-- Schema modifiers: These transformations allow us to manipulate the data to create new derived columns based on calculations, aggregate data, or pivoting the data etc.
-- Row modifiers: These transformations allow us to change rows for e.g. filtering rows, sort rows, alter row based on insert/update/delete/upsert policies.
-- Multiple inputs/outputs: These transformations allow us to generate new data with joins, unions, or splitting the data.
-
-#### Power Query
-Power Query is a data transformation engine with a powerful and easy to use interface to connect to the data sources, extract and transform the data. Power Query engine uses a scripting language called M. Since Azure Data Factory uses Apache Spark behind the scene, when the Power Query is inserted into the pipeline, the M language data types are automatically convert into Spark data types.
-- code-free agile data preparation and wrangling at cloud scale
-- embedded excel into the ADF UI and Macro like recording of the transformations
-- Easy to use tool for non-technical users
+Power Query is a data transformation engine with a powerful and easy to use interface to connect to the data sources, extract and transform the data. Power Query engine uses a scripting language called M. M language data types are automatically convert into Spark data types.
 
 
 ### Data Quality
-Data Governance describes strategies for tracking data lineage through a system, knowing who it’s available to, and understanding the catalog of data available to the business. Data quality is a description of optimizing data so that it is complete, timely and consistent.
-Azure Purview is a data governance service on Azure to help organizations to empower its employees to discovery data quickly, classify data and as well as see the data lineage from source to destination. This is possible because Purview creates data map of data estate with the datasets and their relationships and stores the corresponding metadata.
-#### Optimize Dataflows
+Data Governance: strategies for tracking data lineage through a system, knowing who it’s available to, and understanding the catalog of data available to the business. 
+
+Data quality: description of optimizing data so that it is complete, timely and consistent.
+Azure Purview is a data governance service on Azure to discovery data quickly, classify data and as well as see the data lineage from source to destination. 
+
+Optimize Dataflows
 - Tuning Integration Runtime Live time to avoid spin off the cluster during concurrent jobs
 - Partition data during transformation
 - Enable Schema Drift in the Data Flows
 
-#### Slowly Changing Dimensions
+Slowly Changing Dimensions
 
 Type 0: Ignore any changes and keep only the original values
 Type 1: Overwrite the existing values with new values
@@ -474,17 +490,4 @@ Type 3: Add new columns for the new values. Like Current_Phone_Number and Origin
 Type 4: Maintain all the historical values in a new History table.
 Type 5: This an extension of Type 4 where a mini-dimension table is created by maintaining the keys.
 Type 6: This is a combination of Type 1, Type 2 and Type 3. This adds a new record for new values and also maintains a new column.
-
-#### Production
-1) parameters
-- Parameterize can be created inside linked services to pass dynamic values for database, username etc.
-- Pipeline Parameters: Define parameters inside the Pipelines and Data Flows and use inside the expressions activities from data extraction to sink
-- Global parameters are global in the data factory environment, meaning they can be utilized by all pipelines and can be passed to data flows. 
-- System Variables: Azure Data Factory and Synapse Workspace provide System Variables, such as @pipeline().DataFactory, @pipeline().RunId, @trigger().startTime.
-
-2) creating ADF programmatically
-
-3) CICD
-![](docs/CICD.png)
-using Azure DevOps or Github or ARM Template.
 
