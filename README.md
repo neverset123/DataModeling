@@ -339,7 +339,7 @@ steps:
 Personally Identifiable Information (PII) refers to any data that could potentially identify a specific individual. This can be any information that can be used on its own or with other information to identify, contact, or locate a single person, or to identify an individual in context. 
 
 ### storage
-Azure Data Lake Gen 2
+Azure Data Lake Gen 2 ( has been integrated into blob storage with hierarchical namespace)
 - Incorporates and extends Azure Blob Storage.
 - Hierarchical namespaces to enable the better organization of information
 - The entire structure is accessible using Hadoop compatible APIs.
@@ -423,65 +423,54 @@ df.repartition(number_of_workers)
 ![](docs/databricks1.PNG)
 
 ## Data Pipeline
-- data movement
-- data transformation
-- control flow. 
-
-Tools in Azure:
-- Azure Data Factory
-- Synapse Analytics
-while both services can create pipelines for data movement and transformation, Azure Synapse Analytics also includes features for data warehousing and analytics.
-Azure Data Factory supports cross-region Integration Runtimes but Synapse Analytics does not.
-
-building pipeline in production
-1) parameters
-- Pipeline Parameters: Define parameters inside the Pipelines and Data Flows and use inside the expressions activities from data extraction to sink
-- Global parameters are global in the data factory environment, can be utilized by all pipelines and can be passed to data flows. 
-- System Variables: Azure Data Factory and Synapse Workspace provide System Variables, such as @pipeline().DataFactory, @pipeline().RunId, @trigger().startTime.
-
-2) creating ADF programmatically
-
-3) CICD
-![](docs/CICD.png)
-using Azure DevOps or Github or ARM Template
-
+data-driven workflow that orchestrates activities(data movement, data transformation and control flow).
 
 ### Components
 1) linked service
-contains the connection information to a data source.
+used to connect to external resources
 
 2) Datasets
-gives a view on data source objects that are to be used in Dataflows. It can only be created after linked services
+Representations of data structures within the data stores, which simply point to or reference the data you want to use in your activities as inputs or outputs.
 
-3) Integration Runtimes(IR)
+3) Integration Runtimes(IR): It provides the bridge between the public network and private network on-premises. It's the compute infrastructure used by Azure Data Factory to provide data integration capabilities across different network environments
 - Azure IR: Perform data flows, data movement between cloud data stores. can also be used to dispatch activities to external compute such as Databricks, .NET activity, SQL Server Stored Procedure etc. that are in public network or using private network link. Azure IR is fully managed, serverless compute.
 - Self-hosted IR (SHIR): used to perform data movement between a cloud data stores and a data store in private network. can also be used to dispatch activities to external computes on-premises or Azure Virtual Network. These computes include HDInsight Hive, SQL Server Stored Procedure activity etc.
 - Azure-SSIS IR: used to lift and shift the existing SSIS packages to execute in Azure.
+4) Triggers: Events that determine when a pipeline execution needs to happen
+5) Parameters
+- Pipeline Parameters: Define parameters inside the Pipelines and Data Flows and use inside the expressions activities from data extraction to sink
+- Global parameters: can be utilized by all pipelines and can be passed to data flows. 
+- System Variables: Azure Data Factory and Synapse Workspace provide System Variables, such as @pipeline().DataFactory, @pipeline().RunId, @trigger().startTime.
+6) Control Flow: Control flow elements allow you to sequence activities in a pipeline and specify conditions for whether or not to execute certain activities
+7) Data Flow: A graphical interface for data transformation activities. It allows you to develop graphical data transformation logic without writing scripts
 
+### Tools
+Azure Data Factory/Synapse Analytics
+while both services can create pipelines for data movement and transformation, Azure Synapse Analytics also includes features for data warehousing and analytics.
+Azure Data Factory supports cross-region Integration Runtimes but Synapse Analytics does not.
 
-### Mapping Data Flows
-Mapping Data Flows are activities that perform the data extraction from the data stores and then transform and store the transformed data to the destination data store. 
+#### Mapping Data Flows
+Mapping Data Flows in Azure Data Factory are visually-designed data transformations that allow you to build data transformation logic without writing code. They are part of the Data Flow feature in Azure Data Factory.
+Expression Builder:a key tool within Mapping Data Flows to perform transformation logic.
+activities: 
 - Schema modifiers: manipulate the data to create new derived columns, aggregate data, pivoting the data.
 - Row modifiers: filtering rows, sorting rows, altering row based on insert/update/delete/upsert policies.
 - Multiple inputs/outputs: joins, unions, or splitting the data#
 
-Azure Data Factory use Expression Builder to perform transformation logic.
+#### Power Query
+Power Query is more user-friendly and designed for smaller scale transformations by business analysts. Power Query engine uses a scripting language called M.
 
-Power Query is a data transformation engine with a powerful and easy to use interface to connect to the data sources, extract and transform the data. Power Query engine uses a scripting language called M. M language data types are automatically convert into Spark data types.
 
-
-### Data Quality
-Data Governance: strategies for tracking data lineage through a system, knowing who it’s available to, and understanding the catalog of data available to the business. 
-
-Data quality: description of optimizing data so that it is complete, timely and consistent.
+### Data Management
+#### Data Governance
+the overall management of the availability, usability, integrity, and security of the data employed in an enterprise. It's a set of processes, roles, policies, standards, and metrics that ensure the effective and efficient use of information in enabling an organization to achieve its goals.
 Azure Purview is a data governance service on Azure to discovery data quickly, classify data and as well as see the data lineage from source to destination. 
-
 Optimize Dataflows
 - Tuning Integration Runtime Live time to avoid spin off the cluster during concurrent jobs
 - Partition data during transformation
 - Enable Schema Drift in the Data Flows
 
-Slowly Changing Dimensions
+Slowly Changing Dimensions types:
 
 Type 0: Ignore any changes and keep only the original values
 Type 1: Overwrite the existing values with new values
@@ -490,4 +479,9 @@ Type 3: Add new columns for the new values. Like Current_Phone_Number and Origin
 Type 4: Maintain all the historical values in a new History table.
 Type 5: This an extension of Type 4 where a mini-dimension table is created by maintaining the keys.
 Type 6: This is a combination of Type 1, Type 2 and Type 3. This adds a new record for new values and also maintains a new column.
+
+#### Data Quality
+is about the state of your data(complete, timely and consistent)
+
+
 

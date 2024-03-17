@@ -1,0 +1,37 @@
+{
+    "name": "ds_EmpMaster",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "AzureBlobStorage1",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "DelimitedText",
+        "typeProperties": {
+            "location": {
+                "type": "AzureBlobStorageLocation",
+                "fileName": "EmpMaster.csv",
+                "folderPath": "dirpayrollfiles",
+                "container": "adlsnycpayrollyuweiwang"
+            },
+            "columnDelimiter": ",",
+            "escapeChar": "\\",
+            "firstRowAsHeader": true,
+            "quoteChar": "\""
+        },
+        "schema": [
+            {
+                "name": "EmployeeID",
+                "type": "String"
+            },
+            {
+                "name": "LastName",
+                "type": "String"
+            },
+            {
+                "name": "FirstName",
+                "type": "String"
+            }
+        ]
+    }
+}
