@@ -1,0 +1,9 @@
+{
+	"name": "udacity1",
+	"location": "germanywestcentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "bacc6f72-2454-4c65-bb0a-03347d85cb4b",
+		"tenantId": "f958e84a-92b8-439f-a62d-4f45996b6d07"
+	}
+}
