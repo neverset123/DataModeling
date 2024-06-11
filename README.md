@@ -1,6 +1,5 @@
 ## SQL database
-database is a collection of tables, each talbe represents one entity type.
-a very popular example database is Sakila in Star Schema.
+database is a collection of tables, each table represents one entity type.
 
 advantages:
 - ease of use SQL
@@ -15,10 +14,10 @@ advantages:
 
 disadvantages:
 - not able to handle large amount of data: only scale vertically by adding more storage
-- not able to store different data type formats
-- ACID reduces throughtput (fast read is not possible)
-- flexible schema is not supported (columns added do not have to be used by every row)
-- availability is limited (as it is not distributed)
+- not able to store different data type after schema definition
+- ACID reduces throughtput due to check operations
+- flexible schema is not supported (schemaless design not supported)
+- availability is limited (not distributed)
 - no horizontal scaling 
 
 
