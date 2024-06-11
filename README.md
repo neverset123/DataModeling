@@ -34,35 +34,36 @@ Completed transactions are saved to database even in cases of system failure
 
 
 ### OLAP(Online Analytical Processing) & OLTP(Online Transactional Processing)
-one database for all would lead to 
+one database for all: 
 
     - excellent for operation
     - no redundancy, high integrity
     - slow for analytics
     - hard to understand
 #### OLAP
-optimized for these workloads allow for complex analytical and ad hoc queries, including aggregations. These type of databases are optimized for reads.
+databases are optimized for reads;
+optimized for complex analytical and ad hoc queries, including aggregations. 
 
 #### OLTP
-optimized for these workloads allow for less complex queries in large volume. The types of queries for these databases are read, insert, update, and delete.
+databases are optimized for read, insert, update, and delete;
+optimized for less complex queries in large volume.
 
 ### Normalizaiton & Denormalization
 1) Normalization: increase data integrity by reducing data redundancy
 2) Denormalizaiton: increase performance by reducing number of joins 
 
 #### normalization
-- 1NF
-    - Atomic values: each cell contains unique and single values
-    - Be able to add data without altering tables(adding or removing columns)
-    - Separate different relations into different tables
-    - Keep relationships between tables together with foreign keys
-- 2NF
-    - Have reached 1NF
-    - All columns in the table must rely on the Primary Key(so that data can be joined)
-- 3NF
-    - Must be in 2nd Normal Form
-    - No transitive dependencies(non-key column does not depend on another non-key column)
-    - Remember, transitive dependencies you are trying to maintain is that to get from A-> C, you want to avoid going through B.
+redancency reduced from 1NF to 3NF.
+- 1NF(Normal Form): atomicity of data
+    - each cell contains unique and single value
+    - each record (row) in a table is uniquely identifiable
+    - all columns depend on the primary key
+- 2NF: address partial dependencies
+    - It is in 1NF
+    - All non-key columns are **fully** functionally dependent on the entire primary key
+- 3NF: ensure data integrity
+    - It is in 2NF
+    - There are no transitive dependencies. This means that non-key columns must not depend on other non-key columns. Each non-key column must be directly dependent on the primary key.
 
 #### denormalization
 denormalization comes after normalization.
