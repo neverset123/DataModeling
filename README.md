@@ -326,109 +326,113 @@ Modern lakehouse architectures provide a metadata and data governance layer on t
 Personally Identifiable Information (PII) refers to any data that could potentially identify a specific individual. This can be any information that can be used on its own or with other information to identify, contact, or locate a single person, or to identify an individual in context. 
 
 ### storage
-Azure Data Lake Gen 2 ( has been integrated into blob storage with hierarchical namespace)
-- Incorporates and extends Azure Blob Storage
-- Hierarchical namespaces to enable the better organization of information
-- The entire structure is accessible using Hadoop compatible APIs
+Azure Data Lake Gen 2 ( has been integrated into blob storage with hierarchical namespace): combines the power of a Hadoop compatible file system(including APIs) with integrated hierarchical namespace with the massive scale and economy of Azure Blob Storage. It enhances the capabilities of Azure Data Lake Storage Gen1 by enabling a high-performance file system layer on top of blob storage.
 
-Delta Lake
+Delta Lake:
 ![](docs/delta_lake.PNG)
-Delta Lake is an open-source storage layer that brings ACID (Atomicity, Consistency, Isolation, Durability) transactions to Apache Spark and big data workloads. It's designed to provide reliability to both batch and streaming data processing, handling scenarios such as schema enforcement and evolution, and data consistency.
-- Parquet data files as partitions
-- Json files as transaction log (provide ACID transactions and isolation to spark)
-- Checkpoint file
+Delta Lake is an open-source storage layer that brings ACID transactions to Apache Spark and big data workloads. It's designed to provide reliability to both batch and streaming data processing, handling scenarios such as schema enforcement and evolution, and data consistency.
+- ACID Transactions: Data reliability is ensured with ACID transactions
+- Scalable Metadata Handling: Handles metadata of petabyte-scale tables with billions of files at ease, making it faster to query table data.
+- Time Travel (Data Versioning): Stores a history of all the operations that happened in the table, allowing developers to access older versions of data for audits, rollbacks or to reproduce experiments.
+- Unified Batch and Streaming Source and Sink: A table in Delta Lake is both a batch table, as well as a streaming source and sink. Streaming data ingest, batch historic backfill, and interactive queries all just work out of the box.
 
-Caching features of delta
+Caching of delta lake
 - Delta Cache
+   a high-performance caching layer that automatically caches frequently accessed data in the memory of your cluster's worker nodes.
 - Result Cache
+  a feature provided by some database systems and data processing frameworks to improve the performance of repeated queries. When a query is executed, the system stores the result of the query in a cache. If the same query is executed       again, the system can retrieve the result from the cache instead of executing the query again, which can save time and resources
 
-stages for data processing:
+data processing stages:
 - Bronze Stage: ingesting raw into ingestion table
 - Silver Stage: data are refined and combined
 - Gold Stage: creation of features and aggregates such as star schema's fact and dimension tables.
-### hadoop
+### hadoop system
 ![](docs/data_lake.PNG)
-
-hadoop is an ecosystem of tools for big data storage and data analysis, consists of Hadoop Distributed File System(HDFS) and MapReduce (in general means of hadoop). 
-- The major difference between Spark and Hadoop is how they use memory. Hadoop writes intermediate results to disk whereas Spark tries to keep data in memory whenever possible. This makes Spark faster for many use cases.
-- The Hadoop ecosystem includes a distributed file storage system called HDFS (Hadoop Distributed File System). Spark does not include a file storage system. You can use Spark on top of HDFS but you do not have to. Spark can read in data from other sources as well.
+hadoop is an ecosystem of tools for big data storage and data analysis, consists of Hadoop Distributed File System(HDFS, splits files into 64 or 128 megabyte blocks and replicates these blocks across the cluster) and MapReduce. 
+- The major difference between Spark and Hadoop: Hadoop writes intermediate results to disk; Spark keeps data in memory whenever possible. This makes Spark faster(10-100x).
+- The Hadoop ecosystem includes a distributed file storage system called HDFS (Hadoop Distributed File System). Spark does not include a file storage system(Spark on top of HDFS is not a must). 
 
 Apache Pig: a SQL-like language that runs on top of Hadoop MapReduce
 Apache Hive: another SQL-like interface that runs on top of Hadoop MapReduce
 
-HDFS splits files into 64 or 128 megabyte blocks and replicates these blocks across the cluster.
-
 #### MapReduce
 MapReduce is a programming technique for manipulating large data sets. "Hadoop MapReduce" is a specific implementation of this programming technique.
 
-- first dividing up a large dataset and distributing the data across a cluster. 
+- Dividing up a large dataset and distributing the data across a cluster. 
 - In the map step, each data is analyzed and converted into a (key, value) pair. Then these key-value pairs are shuffled across the cluster so that all keys are on the same machine. 
 - In the reduce step, the values with the same keys are combined together.
 
 #### Spark
-- The master node is responsible for orchestrating the tasks across the cluster
-- Workers are performing the actual computations
+ an open-source, distributed computing system used for big data processing and analytics. It provides an interface for programming entire clusters with implicit data parallelism and fault tolerance.
+- Master: orchestrating the tasks across the cluster
+- Workers: performing the actual computations
 
 weakness:
-- Spark Streaming’s latency is at least 500 milliseconds since it operates on micro-batches of records.
+- Memory Consumption: Spark uses in-memory computation for speed, which can be a problem for large datasets that don't fit into memory
+- Latency: Spark Streaming’s latency is at least 500 milliseconds(operates on micro-batches).
 - Spark only supports ML algorithms that scale linearly with the input data size
 
-1) pure function
-functions that preserve their inputs and avoid side effects, these are called pure functions.
-Spark function makes a copy of its input data and never changes the original parent data.
+1. pure function
+functions that are deterministic and No Side Effects are called pure functions.
+Spark function never changes the original parent data by making a copy of input data.
 
-2) lazy evaluation
-Before Spark does anything with the data in your program, it first built Directed Acyclic Graph (DAG) of what functions and data it will need.
+2 lazy evaluation
+calculations are delayed until the result is required by building Directed Acyclic Graph (DAG) of what functions and data it will need.
+Apache Spark supports two types of operations: transformations(lazy) and actions(not lazy).
+Transformation:
+    - Narrow transformations: These transformations do not require the data to be shuffled across the partitions. Examples include map(), filter(), and union().
+    - Wide transformations: These transformations require the data to be shuffled. Examples include groupByKey(), reduceByKey(), and join().
+Action: return a value to the driver program or write data to an external storage system. Actions trigger the computation for transformations. Examples of actions include count(), first(), take(), collect(), and saveAsTextFile().
 
-3) map
-Maps simply make a copy of the original input data, and transform that copy according to whatever function you put inside the map.
+3. map
+Maps simply make a copy of the original input data, and transform that copy according to function inside the map.
 
-4) programming
-- Imperative programming-->how
-- Ceclarative programming-->what
+4. programming style
+- Imperative programming(how): provide a sequence of commands or statements to change a program's state.
+- Declarative programming(what): tell the computer what you want to do, and let the computer figure out how to do it.
 
-5) shuffle (different from ML shuffle)
+5. shuffle (different from ML shuffle)
 Shuffling is the process of redistributing data across partitions that may cause data to be moved across the network and between executors. This is often a costly operation and can have a significant impact on performance. Shuffling can occur during operations like join, groupByKey, reduceByKey, repartition.
 
-##### spark debugging and optimization
-Spark makes a copy of the input data every time you call a function. So, the original debugging variables that you created won't actually get loaded into the worker nodes. Instead, each worker has their own copy of these variables, and only these copies get modified.
+spark debugging
+Spark makes copy of the input data during calling a function, each worker has their own copy of these variables, and only these copies get modified. 
 1) Accumulator can be used to help tracking errors.
-2) Broadcast variable is a read-only variable to all worker nodes for use in one or more operations,  used to save the cost of shipping a large read-only lookup table to every node. 
+2) Broadcast variable is a read-only variable to all worker nodes for use in one or more operations, saving the cost of shipping a large read-only lookup table to every node. 
 
-##### Transformations and Actions
-
-##### Data Skew
+Data Skew
 solution: partition the data to change workload on worker node.
 - Assign a new, temporary partition key(new column or composite key)
 - Repartition by number of Spark workers
-df.repartition(number_of_workers)
 
 #### Databricks
-1) Azure Databricks is used to prepare, train, process, and transform data for use in Azure Synapse Analytics or Microsoft Power BI.
+1) used to prepare, train, process, and transform data for use in Azure Synapse Analytics or Microsoft Power BI.
 ![](docs/databricks.PNG)
 
-2) Databricks provides data flows and processing, and preparing data for machine learning solutions.
+2) providing data flows and processing, and preparing data for machine learning solutions.
 ![](docs/databricks1.PNG)
 
 ## Data Pipeline
-data-driven workflow that orchestrates activities(data movement, data transformation and control flow).
+a set of processes that move data from one system to another, which could be for various purposes like data integration, data migration, data transformation, or data analytics.
 
 ### Components
 1) linked service
 used to connect to external resources
 
 2) Datasets
-Representations of data structures within the data stores, which simply point to or reference the data you want to use in your activities as inputs or outputs.
+Representations of data structures within the data stores, which point to or reference the data you want to use as inputs or outputs.
 
-3) Integration Runtimes(IR): It provides the bridge between the public network and private network on-premises. It's the compute infrastructure used by Azure Data Factory to provide data integration capabilities across different network environments
-- Azure IR: Perform data flows, data movement between cloud data stores. can also be used to dispatch activities to external compute such as Databricks, .NET activity, SQL Server Stored Procedure etc. that are in public network or using private network link. Azure IR is fully managed, serverless compute.
-- Self-hosted IR (SHIR): used to perform data movement between a cloud data stores and a data store in private network. can also be used to dispatch activities to external computes on-premises or Azure Virtual Network. These computes include HDInsight Hive, SQL Server Stored Procedure activity etc.
-- Azure-SSIS IR: used to lift and shift the existing SSIS packages to execute in Azure.
-4) Triggers: Events that determine when a pipeline execution needs to happen
+3) Integration Runtimes(IR): compute infrastructure used to provide data integration capabilities across different network environments. It serves as the bridge between public network data stores and data stores within private networks.
+- Azure IR: used for data movement activities in public network and dispatching activities to external computes for compute-intensive tasks. It's a multi-tenant, managed cloud data integration service.
+- Self-hosted IR (SHIR): used to perform data movement between a cloud data stores and a data store in private network, or dispatch activities to external computes on-premises or Azure Virtual Network. These computes include HDInsight Hive, SQL Server Stored Procedure activity etc.
+- Azure-SSIS IR: used for running SQL Server Integration Services (SSIS) packages. It's a fully managed cluster of virtual machines dedicated to running SSIS packages.
+
+4) Triggers: Events that determine when execution needs to happen
+
 5) Parameters
 - Pipeline Parameters: Define parameters inside the Pipelines and Data Flows and use inside the expressions activities from data extraction to sink
 - Global parameters: can be utilized by all pipelines and can be passed to data flows. 
 - System Variables: Azure Data Factory and Synapse Workspace provide System Variables, such as @pipeline().DataFactory, @pipeline().RunId, @trigger().startTime.
+
 6) Control Flow: Control flow elements allow you to sequence activities in a pipeline and specify conditions for whether or not to execute certain activities
 7) Data Flow: A graphical interface for data transformation activities. It allows you to develop graphical data transformation logic without writing scripts
 
