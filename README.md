@@ -66,37 +66,37 @@ redancency reduced from 1NF to 3NF.
     - There are no transitive dependencies. This means that non-key columns must not depend on other non-key columns. Each non-key column must be directly dependent on the primary key.
 
 #### denormalization
-denormalization comes after normalization.
+Denormalization is a strategy used in database design to improve the read performance of a database. It involves adding redundant data to one or more tables, which can reduce the need for complex joins and other operations that can be expensive in terms of performance.
 
 ### Fact & Dimension Table
 
 #### Fact Table(Numeric & Additive)
-Fact table records business events in quantifiable metrics.
+A fact table stores quantitative information for analysis and is often denormalized. It contains the measures, metrics or facts of a business process.
 
 #### Dimension Table
-records context of business events (who, what, where, why etc.), it contains descriptive attributes.
+A dimension table contains descriptive attributes (or fields) that are typically textual fields (or discrete numbers that behave like text). These attributes are used as search parameters to answer business questions(who, what, where, why etc.)
 
 ### Schema Struct
 - Star Schema
- consists of one or more fact tables referencing any number of dimension tables.
+ consists of one or more fact tables referencing any number of dimension tables. it is not normalized.
  advantages:
-    - denormalized
     - simplifies queries by relaxation of 3nf rules
     - fast aggregations (less joins)
-drawbacks:
-    - data Integrity issue
-    - decrease query flexibility(no ad-hoc query)
-    - many to many relationship is a simplification
 
-- snowflake Schema
-    - Star Schema is a special, simplified case of the snowflake schema.
-    - Star schema does not allow for many to many relationships between dimension tables while the snowflake schema does.
-    - Snowflake schema is more normalized than Star schema but only in 1NF or 2NF
+ drawbacks:
+    - data Integrity issue
+    - not efficient for types of queries that involve complex joins across multiple dimension tables.
+    - Complexity with Many-to-Many Relationships:These situations require a more complex design, such as a snowflake schema or a bridge table.
+
+- Snowflake Schema
+  the dimension tables are normalized, which means the data is organized to reduce redundancy, and this makes the schema more complex. This normalization     splits data into additional tables, hence the "snowflaked" appearance of the schema. Star Schema is a special, simplified case of the snowflake schema.
+    - Allow for many to many relationships between dimension tables
+    - More normalized than Star schema but only in 1NF or 2NF
 
 
 ### Postgres
 1) autocommit
-each action  is commited without having to cann conn.commit() after each command
+each action  is commited without having to add conn.commit() after each command
 ```
 conn.set_session(autocommit=True)
 ```
@@ -107,35 +107,30 @@ python wrapper to operate on postgres
 
 ## NoSQL database
 advantages:
-- support large amounts of data
-- horizonal scalability
-- high throughput
-- flexible schema
-- high availability
-- able to store different data type formats
-- low latency for distributed users
+- Big Data: working with large amounts of data and particularly with unstructured data
+- Horizonal Scalability: highly scalable and are designed to expand easily to handle more traffic and data by spreading out across more servers.
+- Flexible Schema: store different types of data in each record, allowing for faster development.
+- Low Latency for distributed users: faster data operations as they can handle large amounts of data and high load.
 
 disadvantages:
-- not ACID compliance
+- not ACID compliant
 - JOINS is not allowed(as it results in full table scan)
 - aggregations and analytics are not efficient or allowed
-- Ad-hoc queries are possible but difficult(as data model was done to fix particular queries)
-- flexible queries are not supported
+- Ad-hoc queries are possible but difficult(data model was done to fix particular queries)
 - overhead for small dataset
 
-### CAP theorem 
-a database can actually only guarantee two out of the three in CAP
-- Consistency: every read from database gets the latest piece of data or an error(differt from ACID consistency)
-- Availability
-- partition Tolerance
+### CAP 
+a database can only guarantee two out of the three in CAP
+- Consistency: every read from database gets the latest piece of data or an error(different from ACID consistency);all nodes in the system see the same data at the same time
+- Availability: Every request to the database receives a response, without guarantee that it contains the most recent write.
+- Partition Tolerance:  The system continues to function despite network partitions (breaks in the communication between nodes in the system).
 
-
-### types of implementation
-some NoSQL databases that offer some form of ACID transaction, such as MongoDB
+### types of NoSQL
+some NoSQL databases offer some form of ACID transaction, such as MongoDB.
 - Apache Cassandra (Partition Row store)
 - MongoDB (Document store)
 - DynamoDB (Key-Value store)
-- Apache HBase (Wide Column Store)
+- Apache HBase (Column-Oriented Store)
 - Neo4J (Graph Database)
 
 ### Cassandra
