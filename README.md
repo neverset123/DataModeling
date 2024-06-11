@@ -160,6 +160,7 @@ JOIN, GROUP BY, Subquery are not supported.
 ## Data Warehouse
 data warehouse is OLAP system, a copy of transaction data specifically structured for query and analysis.
 dimensional model could be different from traditional dimension table. Star schema is a good option for OLAP, not OLTP(too many joins).
+Data warehouse can deal with specific data structures for highly performant analytics but they do not perform well with unstructured data.
 
 ```
 tips for ipython-sql in jupyter
@@ -204,37 +205,34 @@ combines the strengths of both Kimball's Bus Architecture and Inmon's Cooperativ
 an aggregation of fact metrics on a number of dimensions. the OLAP cubes should store the finest grain of data.
 using **grouping sets ()** or **cube()** could optimize query with only one pass through fact tables.
 
-1) Multidimensional Online Analytical Processing(MOLAP)
+1) Multidimensional Online Analytical Processing(MOLAP):
 indexes data through a multidimensional model, very strong for providing summarized and complex analysis.
 MOLAP allows for faster data retrieval through optimized indexing and data storage, and pre-computation of summarized data and storing them on a special purpose **non-relational** database.
 
-3) Relational Online Analytical Processing(ROLAP)
+3) Relational Online Analytical Processing(ROLAP):
 compute the OLAP cubes on the fly from existing **relational** databases where dimensional model resides, provide up-to-the-minute data analysis.
 ROLAP tools tend to scale much better than MOLAP tools, and more flexible than MOLAP in handling changing data models.
 
 #### Operations
 1) Rollup
-Roll-up: Sum up the sales of each city by Country: e.g. US, France (less columns in branch dimension)
+This operation performs aggregation on a data cube, either by climbing up a concept hierarchy for a dimension or by dimension reduction (less columns in branch dimension)
 
 2) Drill-down
-Drill-Down: Decompose the sales of each city into smaller districts (more columns in branch dimension)
+the reverse of the roll-up operation. It navigates from less detailed data to more detailed data (more columns in branch dimension)
 
-3) Slice
+3) Slice & Dice
 Slice: Reducing N dimensions to N-1 dimensions by restricting **one** dimension to a single value
-
-4) Dice
 Dice: computing a sub-cube by restricting **multi** dimensions
 
+4) Pivot (or rotate):
+This operation is a visualization operation that rotates the data axes in view to provide a multi-dimensional view of data.
 
 ### Cloud Data Warehouse
 #### Database
 1. SQL
 managed databases: the user doesn't have to manage the hardware resources to gain optimal performance.
 1) Microsoft Azure
-Azure SQL Database (MS SQL Server)
-Azure Database for MySQL
-Azure Database for MariaDB
-Azure Database for PostgreSQL
+Azure SQL Database (MS SQL Server), Azure Database for MySQL, Azure Database for MariaDB, Azure Database for PostgreSQL
 2) GCP
 Cloud SQL (MySQL, PostgreSQL, and MS SQL Server)
 3) AWS
@@ -245,11 +243,11 @@ Amazon RDS (MySQL, PostgreSQL, MariaDB, Oracle, MS SQL Server)
 Gremlin - graph database
 MongoDB - document
 Cassandra - column oriented
-2) GCP
+3) GCP
 Big Table - column oriented
 Firestore - document
 MongoDB Atlas - document
-3) AWS
+4) AWS
 DynamoDB - Key value
 DocumentDB - document
 Keyspaces = column oriented
@@ -257,18 +255,15 @@ Neptune - graph
 Time stream - time series
 
 #### ETL & ELT
-
 ETL: happens on an intermediate server
 ELT: load large amounts of data quickly, especially for streaming data. happens on the destination server
 
 Available ETL/ELT tools:
-
 - Azure Data Factory
 - AWS Glue
 - GCP Dataflow
 
 Data ingestion tools:
-
 - Azure - Streaming Analytics
 - AWS - Kinesis
 - GCP - Dataflow
@@ -281,10 +276,10 @@ data warehouse tools
 ### Azure Data Warehouse
 advantages over other cloud providers:
 - Integration with Azure Ecosystem
-- On-Demand scaling of compute power
+- Allowing you to scale compute and storage independently
 - Ingest data from a wide variety of sources
 
-Architecture
+#### Architecture
 
 1) based on azure synapse for comprehensive integrated data warehousing and analytics
 ![](docs/Azure_data_warehouse.PNG)
@@ -293,41 +288,38 @@ this architecture design can be  automated with Azure Data Factory, creating dat
 ![](docs/Azure_data_warehouse_databricks.PNG)
 databricks utilizes Spark to create ETL pipelines, is more suitable for lake house architecture.
 
-SQL Pool
+#### Compute
+- Azure Dedicated SQL Pools:
+designed for large-scale, enterprise-level data warehousing workloads. It uses a provisioned resources model(allocate a certain amount of resources and pay for those resources whether you're using them or not; uses Massively Parallel Processing (MPP) architecture to quickly run complex queries across large amounts of data).
+- Azure Synapse Analytics Serverless SQL Pools:
+designed for on-demand and exploratory analysis, more cost-effective if workload is intermittent or low-volume. It uses a shared resources model(only pay based on the amount of data processed).
 
-- Azure Dedicated SQL Pools
-designed for large-scale, enterprise-level data warehousing workloads. It uses a provisioned resources model, where you allocate a certain amount of resources to your SQL pool and pay for those resources whether you're using them or not. It uses Massively Parallel Processing (MPP) architecture to quickly run complex queries across large amounts of data.
-- Azure Synapse Analytics Serverless SQL Pools
-This is designed for on-demand and exploratory analysis. You only pay for the queries that you run based on the amount of data processed. It's ideal for scenarios where you have unpredictable or bursty workloads, or when you're exploring data before deciding to move it to a dedicated SQL pool. It uses a shared resources model, which can be more cost-effective if your workload is intermittent or low-volume.
-
-Ingesting Data into Azure Synapse:
+#### Azure Synapse Pipeline
+Azure Synapse cannot convert string to datetime!!
+1. Ingestion
 ![](docs/Ingestion.PNG)
+- linked services
+  a linked service contains connection information to other services
+- pipeline
+  A pipeline contains the logical flow for an execution of a set of activities
+- trigger or a one-time data ingestion
+  trigger could be manually startet or automatically scheduled
 
-- Creating linked services
-    - a linked service contains connection information to other services
-- Creating a pipeline
-    - A pipeline contains the logical flow for an execution of a set of activities
-- Using a trigger or a one-time data ingestion
-    -  manually start a data ingestion or schedule a trigger
-
-#### ETL / ELT Pipelines (utilizing SQL)
+2. ETL/ELT (utilizing SQL)
 **Azure Polybase**: using TSQL to query blob storage in support of ELT scenarios
 ![](docs/ELT_pipeline.PNG)
 steps: 
 - Extract: Data ingestion into Blob Storage or Azure Data Lake Gen 2
 - Load: Create EXTERNAL staging tables in the Data Warehouse
-    - Azure Synapse cannot convert string to datetime!!
-- Transform: Transform data from staging tables to DW tables
+- Transform: Transform data from staging tables to data warehouse tables
 
 ## Data Lake
-- Data warehouses are based on specific and explicit data structures that allow for highly performant business intelligence and analytics but they do not perform well with unstructured data.
++ Flexibility: Data lakes are capable of storing all types of data, regardless of whether that data is structured, semi-structured, and unstructured data;
++ Low Cost: use inexpensive hardware and open-source software(Hadoop and Spark), making them less costly to operate than traditional relational databases when storing large amounts of data; provide schema-on-read rather than schema-on-write which lowers the cost and work of ingesting large amounts of data.
+- Data lakes are unable to support transactions and perform poorly with changing datasets;
+- Data governance became difficult due to the unstructured nature of these systems.
 
-- Data lakes are capable of ingesting massive amounts of both structured and unstructured data with Hadoop and Spark providing processing on top of these datasets. Data lakes are unable to support transactions and perform poorly with changing datasets. Data governance became difficult due to the unstructured nature of these systems.
-    - Lower costs associated with using big data tools for ETL / ELT operations.
-    - Data lakes provide schema-on-read rather than schema-on-write which lowers the cost and work of ingesting large amounts of data.
-    - Data lakes provide support for structured, semi-structured, and unstructured data.
-- Modern lakehouse architectures combine the strengths of data warehouses and data lakes into a single, powerful architecture, which provide the ability to quickly ingest large amounts of data and then incrementally improve the quality of the data.
-    - a metadata and data governance layer on top of the data lake
+Modern lakehouse architectures provide a metadata and data governance layer on top of the data lake, which combines the strengths of data warehouses and data lakes into a single powerful architecture, offer the ability to quickly ingest large amounts of data and then incrementally improve the quality of the data.
 
 ![](docs/datalake.PNG)
 
@@ -335,9 +327,9 @@ Personally Identifiable Information (PII) refers to any data that could potentia
 
 ### storage
 Azure Data Lake Gen 2 ( has been integrated into blob storage with hierarchical namespace)
-- Incorporates and extends Azure Blob Storage.
+- Incorporates and extends Azure Blob Storage
 - Hierarchical namespaces to enable the better organization of information
-- The entire structure is accessible using Hadoop compatible APIs.
+- The entire structure is accessible using Hadoop compatible APIs
 
 Delta Lake
 ![](docs/delta_lake.PNG)
@@ -345,6 +337,7 @@ Delta Lake is an open-source storage layer that brings ACID (Atomicity, Consiste
 - Parquet data files as partitions
 - Json files as transaction log (provide ACID transactions and isolation to spark)
 - Checkpoint file
+
 Caching features of delta
 - Delta Cache
 - Result Cache
