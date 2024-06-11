@@ -105,6 +105,10 @@ python wrapper to operate on postgres
 3) postgres does not support IF NOT EXISTS in CREATE DATABASE
 4) string type in table: char(n), varchar(n), text
 
+```
+#connect to database
+%sql postgresql://student:student@127.0.0.1:5432/pagila
+``` 
 ## NoSQL database
 advantages:
 - Big Data: working with large amounts of data and particularly with unstructured data
@@ -134,83 +138,79 @@ some NoSQL databases offer some form of ACID transaction, such as MongoDB.
 - Neo4J (Graph Database)
 
 ### Cassandra
-open source NoSQL DB, marsterless architecture, linear scalable. it support AP of CAP.
-Since Apache Cassandra requires data modeling based on the query you want, you can't do ad-hoc queries.
+open source, linear scalable, distributed, marsterless architecture, can't do ad-hoc queries(requires data modeling based on the query). support AP out of CAP.
+It organizes data by rows and columns, but unlike a relational database, not all rows have to have the same columns. This makes it highly flexible and efficient for reading and writing data. It supports query without specifying all the primary keys, but it is not recommended 
 1) Keyspace
 same as database
 2) PRIMARY KEY
-primary key in Cassandra consists of two parts: the partition key and the clustering columns. The partition key determines which node stores the data. The clustering columns determine the order of the data inside the partition.
+primary key consists of two parts: partition key(determines which node stores the data) and clustering columns(determine the order of the data inside the partition).
 Primary key has to be unique, otherwise data will be overwritten!!
-3) PARTITION KEY
-
-4) CLUSTERING COLUMNS
-- clustering columns sort data in ascending order
-- none or more than one clusering columns can be used
-- using CLUSTERING COLUMNS in same order in SELECT as they were in WHERE clause
-5) ALLOW FILTERING
-support query without specifying all the primary keys, but it is not recommended 
-6) all placeholder should be %s when using session.execute(even if the data type is int)
-7) denormalizaiton is a must in Cassandra, as there is no JOINs in Cassandra
+   - PARTITION KEY
+   - CLUSTERING COLUMNS
+    - clustering columns sort data in ascending order
+    - none or more than one clusering columns can be used
+    - using CLUSTERING COLUMNS in same order in SELECT as they were in WHERE clause
+6) Placeholder should be %s when using session.execute(even if the data type is int)
+7) no JOINs in Cassandra(denormalizaiton is a must)
 8) one table per query
 
-#### CQL
+#### CQL(Cassandra Query Language)
 JOIN, GROUP BY, Subquery are not supported.
 
-## data warehouse
+## Data Warehouse
 data warehouse is OLAP system, a copy of transaction data specifically structured for query and analysis.
-data struct for data warehouse
-    - dimensional model
-    could be different from traditional dimension table. Star schema is a good option for OLAP, not OLTP(too many joins), it is easier to understand than 3NF Schema.
+dimensional model could be different from traditional dimension table. Star schema is a good option for OLAP, not OLTP(too many joins).
 
+```
 tips for ipython-sql in jupyter
 -%load-ext sql
 - %sql
 one line sql query, can access python var using $
 - %%sql
 multi-line sql query, can not access python var using $
-
 ```
-#connect to database
-%sql postgresql://student:student@127.0.0.1:5432/pagila
-``` 
-
 ### Architecture
-
 #### Kimball's Bus Architecture
+bottom-up approach where data marts are created first and then combined together to form a complete data warehouse.
+two different levels of data granularity(atomic and summary data) stored in the data warehouse.
 ![](docs/Kimball_bus.png)
-- conformed dimensions
-- atomic and summary data
-- dimensional
++ performance and flexibility: each data mart is alighed with a specific business process; the architecture allows for the development of one data mart at a time.
+- Integration challenges adn complexity: Managing conformed dimensions across multiple data marts can be complex.
 
 #### Independent data marts
+small-scale, focused data warehouses that are developed independently for a specific business unit or team within an organization.
 ![](docs/Data_marts.png)
-- independent ETL processes and dimensional models
-- seperate and small dimensional models
-- different fact tables for same events
-- inconsistent views
-- generally discouraged
++ speed of development: independent ETL processes and dimensional model; seperate and small dimensional models
++ business alignment:  closely aligned with the needs of a specific business unit or team
+- data consistency: different fact tables for same events; inconsistent views
+- data redundency and scalability: generally discouraged
 
 #### Inmon's Cooperative Information Factory(CIF)
+top-down approach or the Inmon methodology: the first step is to build a central data warehouse that contains all of the organization's data; data marts are created for specific business functions or departments.
 ![](docs/CIF.PNG)
-- two ETL Processes: ETL Process for the Data Warehouse, ETL Process for the Data Marts
-- 3NF Database accessable by end-user
-- data marts are dimnesionally modeled and mostly aggregated
++ data consistency and comprehensive view: The central data warehouse provides a comprehensive view of the entire organization's data
++ scalability: new data marts can be added without affecting the existing structure.
+- complexity: Building a central data warehouse can be a complex and time-consuming; ETL Process for the Data Warehouse, ETL Process for the Data Marts;
+- flexibility: changes impact all the data marts.
 
 #### Hybrid Kimball Bus & Inmon CIF
+combines the strengths of both Kimball's Bus Architecture and Inmon's Cooperative Information Factory (CIF) to create a data warehousing solution that is both flexible and consistent.It exposes data warehouse to the enterprise. 
 ![](docs/Hybrid.png)
-- Removes Data Marts
-- Exposes the enterprise data warehouse
-
++ Data Consistency and Integration:: Central Data Warehouse
++ Conformed Dimensions: ensure that data is consistent and integrated across different data marts.
+- Complex to implement and manage 
 
 ### OLAP Cubes
-an aggregation of a fact metric on a number of dimensions. the OLAP cubes should store the finest grain of data.
-using **grouping sets ()** or **cube()** could optimize query with only one pass through facts tables instead of multi.
+an aggregation of fact metrics on a number of dimensions. the OLAP cubes should store the finest grain of data.
+using **grouping sets ()** or **cube()** could optimize query with only one pass through fact tables.
 
-1) MOLAP
-Pre-aggregate the OLAP cubes and saves them on a special purpose non-relational database.
+1) Multidimensional Online Analytical Processing(MOLAP)
+indexes data through a multidimensional model, very strong for providing summarized and complex analysis.
+MOLAP allows for faster data retrieval through optimized indexing and data storage, and pre-computation of summarized data and storing them on a special purpose **non-relational** database.
 
-2) ROLAP
-compute the OLAP cubes on the fly from existing relational databases where dimensional model resides. 
+3) Relational Online Analytical Processing(ROLAP)
+compute the OLAP cubes on the fly from existing **relational** databases where dimensional model resides, provide up-to-the-minute data analysis.
+ROLAP tools tend to scale much better than MOLAP tools, and more flexible than MOLAP in handling changing data models.
 
 #### Operations
 1) Rollup
