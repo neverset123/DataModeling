@@ -415,65 +415,72 @@ solution: partition the data to change workload on worker node.
 a set of processes that move data from one system to another, which could be for various purposes like data integration, data migration, data transformation, or data analytics.
 
 ### Components
-1) linked service
+1) linked service: 
 used to connect to external resources
 
-2) Datasets
-Representations of data structures within the data stores, which point to or reference the data you want to use as inputs or outputs.
+2) Datasets: 
+Representations of data structures within the data stores, which point to or reference the data used as inputs or outputs.
 
-3) Integration Runtimes(IR): compute infrastructure used to provide data integration capabilities across different network environments. It serves as the bridge between public network data stores and data stores within private networks.
-- Azure IR: used for data movement activities in public network and dispatching activities to external computes for compute-intensive tasks. It's a multi-tenant, managed cloud data integration service.
-- Self-hosted IR (SHIR): used to perform data movement between a cloud data stores and a data store in private network, or dispatch activities to external computes on-premises or Azure Virtual Network. These computes include HDInsight Hive, SQL Server Stored Procedure activity etc.
-- Azure-SSIS IR: used for running SQL Server Integration Services (SSIS) packages. It's a fully managed cluster of virtual machines dedicated to running SSIS packages.
+3) Integration Runtimes(IR):
+compute infrastructure used to provide data integration capabilities across different network environments. It serves as the bridge between public network data stores and data stores within private networks.
+- Azure IR: a multi-tenant, managed cloud data integration service used for data movement activities in public network and dispatching activities to external computes. 
+- Self-hosted IR (SHIR): used to perform data movement between a cloud data stores and a data store in private network, or dispatch activities to external computes on-premises or Azure Virtual Network. 
+- Azure-SSIS IR: a fully managed cluster of virtual machines dedicated to running SQL Server Integration Services (SSIS) packages.
 
-4) Triggers: Events that determine when execution needs to happen
+4) Triggers:
+Events that determine when execution needs to happen
 
 5) Parameters
-- Pipeline Parameters: Define parameters inside the Pipelines and Data Flows and use inside the expressions activities from data extraction to sink
-- Global parameters: can be utilized by all pipelines and can be passed to data flows. 
+- Pipeline Parameters: parameters inside the Pipelines and Data Flows
+- Global parameters: utilized by all pipelines and can be passed to data flows. 
 - System Variables: Azure Data Factory and Synapse Workspace provide System Variables, such as @pipeline().DataFactory, @pipeline().RunId, @trigger().startTime.
 
-6) Control Flow: Control flow elements allow you to sequence activities in a pipeline and specify conditions for whether or not to execute certain activities
-7) Data Flow: A graphical interface for data transformation activities. It allows you to develop graphical data transformation logic without writing scripts
+6) Control Flow:
+Control activities in a pipeline and specify conditions for whether or not to execute certain activities
+7) Data Flow:
+graphical data transformation logic interface without writing scripts for data transformation activities.
 
-### Tools
+### Components
 Azure Data Factory/Synapse Analytics
-while both services can create pipelines for data movement and transformation, Azure Synapse Analytics also includes features for data warehousing and analytics.
-Azure Data Factory supports cross-region Integration Runtimes but Synapse Analytics does not.
+- while both services can create pipelines for data movement and transformation, Azure Synapse Analytics also includes features for data warehousing and analytics.
+- Azure Data Factory supports cross-region Integration Runtimes but Synapse Analytics does not.
 
 #### Mapping Data Flows
-Mapping Data Flows in Azure Data Factory are visually-designed data transformations that allow you to build data transformation logic without writing code. They are part of the Data Flow feature in Azure Data Factory.
-Expression Builder:a key tool within Mapping Data Flows to perform transformation logic.
-activities: 
-- Schema modifiers: manipulate the data to create new derived columns, aggregate data, pivoting the data.
-- Row modifiers: filtering rows, sorting rows, altering row based on insert/update/delete/upsert policies.
-- Multiple inputs/outputs: joins, unions, or splitting the data#
+Mapping Data Flows in Azure Data Factory are visually-designed data transformations without writing code. 
+Expression Builder: key tool within Mapping Data Flows to perform transformation logic.
+functions: 
+- Schema modifiers:create new columns, aggregate data, pivot data.
+- Row modifiers: filtering sorting altering rows based on insert/update/delete/upsert policies.
+- Multiple inputs/outputs: joins, unions, or split the data
 
 #### Power Query
-Power Query is more user-friendly and designed for smaller scale transformations by business analysts. Power Query engine uses a scripting language called M.
+more user-friendly and designed for smaller scale transformations. 
+Power Query engine uses a scripting language called M.
 
 
 ### Data Management
 #### Data Governance
 the overall management of the availability, usability, integrity, and security of the data employed in an enterprise. It's a set of processes, roles, policies, standards, and metrics that ensure the effective and efficient use of information in enabling an organization to achieve its goals.
-Azure Purview is a data governance service on Azure to discovery data quickly, classify data and as well as see the data lineage from source to destination. 
-Optimize Dataflows
-- Tuning Integration Runtime Live time to avoid spin off the cluster during concurrent jobs
-- Partition data during transformation
-- Enable Schema Drift in the Data Flows
+Azure Purview is a data governance service to discovery data, classify data and see the data lineage from source to destination. 
 
-Slowly Changing Dimensions types:
+Optimizing data flow in data governance involves ensuring that data moves through your systems efficiently and accurately, while also maintaining compliance with data governance policies:
+- Monitor and Tune Performance: Use Spark's built-in tools to monitor the performance of your data processing tasks and tune your configurations accordingly.
+- Partition Data: Partitioning data can significantly improve the efficiency of data processing tasks by reducing the amount of data that needs to be processed at once. 
+- Monitoring and Alerts: Set up monitoring and alerts to notify you of potential schema shifts or other data quality issues.
+
+Dimensions Changing:
+changes in the structure or type of data fields (dimensions) in dataset due to schema evolution, where new fields are added, existing fields are removed, or the type of fields is changed.
 
 Type 0: Ignore any changes and keep only the original values
 Type 1: Overwrite the existing values with new values
 Type 2: Add a new row with the new values and add a new version column that identifies current and prior version.
-Type 3: Add new columns for the new values. Like Current_Phone_Number and Original_Phone Number
+Type 3: Add new columns for the new values.
 Type 4: Maintain all the historical values in a new History table.
 Type 5: This an extension of Type 4 where a mini-dimension table is created by maintaining the keys.
 Type 6: This is a combination of Type 1, Type 2 and Type 3. This adds a new record for new values and also maintains a new column.
 
 #### Data Quality
-is about the state of your data(complete, timely and consistent)
+state of data(complete, timely and consistent)
 
 
 
